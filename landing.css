@@ -2659,7 +2659,15 @@ img[src$="lea-avatar.jpg"] {
   }
   .hero-visual {
     order: 5;
-    border-bottom: 1px solid var(--ligne);
+    /* Crème melts into white around the phones, then back: no hard lines. */
+    border-top: 0;
+    background: linear-gradient(
+      180deg,
+      var(--creme) 0,
+      var(--blanc) 120px,
+      var(--blanc) calc(100% - 120px),
+      var(--creme) 100%
+    );
   }
   .hero-copy .hero-lead {
     order: 6;
