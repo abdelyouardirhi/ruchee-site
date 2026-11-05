@@ -330,7 +330,7 @@ function init() {
     const msg = el("div", "msg from-lea choices");
     const list = el("div", "choice-list");
     list.setAttribute("role", "group");
-    list.setAttribute("aria-label", "Ce qui vous complique le plus les journées");
+    list.setAttribute("aria-label", "Ce qui vous complique le plus la vie");
     PAINS.forEach((pain, index) => {
       const button = el("button", "choice");
       button.type = "button";
@@ -345,7 +345,7 @@ function init() {
     });
     msg.append(list);
     add(msg);
-    say("Choisissez ce qui vous complique le plus les journées.");
+    say("Choisissez ce qui vous complique le plus la vie.");
     // Focus the group, not a choice: no answer should look preselected.
     list.tabIndex = -1;
     list.focus({ preventScroll: true });

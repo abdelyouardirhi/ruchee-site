@@ -1,6 +1,6 @@
 # Site Ruchée
 
-Site statique et « Parler à Léa » : vidéo de Léa → vocal « qu’est-ce qui vous complique le plus les journées ? » → le visiteur choisit une réponse → vocal de Léa adapté à ce choix → carte prénom, téléphone, e-mail → e-mail affiché dans le chat.
+Site statique et « Parler à Léa » : vidéo de Léa → vocal au dirigeant « qu’est-ce qui vous complique le plus la vie ? » → le visiteur choisit une réponse → vocal de Léa adapté à ce choix → carte prénom, téléphone, e-mail → e-mail affiché dans le chat.
 
 Aucun modèle conversationnel, aucun micro, aucune voix générée en direct. Tous les textes sont dans `chat-content.js` ; les vocaux de Léa sont des MP3 fixes. Seul `/api/recap` tourne côté serveur (Brevo envoie les e-mails).
 

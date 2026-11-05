@@ -19,11 +19,11 @@ export const TTS_MODEL = "voxtral-mini-tts-3-0";
 export const VOICE_ID = "01a1ad29-4e34-76ed-96b7-2ac31605240d"; // « Léa (vidéo) », cloned from the intro video
 export const VOICE_EXPRESSIVENESS = 3;
 
-// First voice note in the chat.
+// First voice note in the chat: speaks to the boss of a cleaning company.
 export const QUESTION = {
-  text: "Dites-moi : qu’est-ce qui vous complique le plus les journées ?",
-  audio: "audio/lea-question-v1.mp3",
-  seconds: 3,
+  text: "Quand on dirige une entreprise de nettoyage, les journées commencent tôt. Qu’est-ce qui vous complique le plus la vie ?",
+  audio: "audio/lea-question-v2.mp3",
+  seconds: 6,
 };
 
 const CLOSING = "Laissez-moi vos coordonnées : nous vous rappelons pour en parler.";
