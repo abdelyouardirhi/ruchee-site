@@ -2,6 +2,7 @@ import {
   callbackEmails,
   normalizeName,
   normalizePhone,
+  painById,
 } from "../../chat-content.js";
 
 export interface D1Result<T = unknown> {
@@ -31,9 +32,6 @@ export interface Env {
   RECAP_ALLOWED_ORIGINS?: string;
   RECAP_DAILY_LIMIT?: string;
   RECAP_DB?: D1Database;
-  VOICE_ENABLED?: string;
-  MISTRAL_VOICE_API_KEY?: string;
-  VOICE_DAILY_LIMIT?: string;
 }
 
 type Code =
@@ -48,6 +46,7 @@ interface Submission {
   name: string;
   phone: string;
   email: string;
+  topic: string;
   requestId: string;
 }
 
@@ -152,7 +151,7 @@ async function submission(request: Request): Promise<Submission | null> {
     );
     if (!data || typeof data !== "object" || Array.isArray(data)) return null;
     const fields = data as Record<string, unknown>;
-    const keys = ["name", "phone", "email", "website", "requestId"];
+    const keys = ["name", "phone", "email", "topic", "website", "requestId"];
     if (
       Object.keys(fields).length !== keys.length ||
       !keys.every((key) => Object.hasOwn(fields, key))
@@ -164,6 +163,8 @@ async function submission(request: Request): Promise<Submission | null> {
     if (!phone) return null;
     const email = emailAddress(fields.email);
     if (!email || fields.website !== "") return null;
+    const pain = painById(fields.topic);
+    if (!pain) return null;
     if (
       typeof fields.requestId !== "string" ||
       !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu.test(
@@ -175,6 +176,7 @@ async function submission(request: Request): Promise<Submission | null> {
       name,
       phone,
       email,
+      topic: pain.id,
       requestId: fields.requestId.toLowerCase(),
     };
   } catch {
@@ -262,7 +264,7 @@ export async function onRequest({
       ).join("");
     };
     const [fingerprint, ipHash, emailHash] = await Promise.all([
-      hash("callback-v1", data.name, data.phone, data.email),
+      hash("callback-v2", data.name, data.phone, data.email, data.topic),
       hash("ip", ip),
       hash("email", data.email),
     ]);

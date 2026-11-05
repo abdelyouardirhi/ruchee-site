@@ -12,9 +12,8 @@ import {
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  WELCOME_TEXT,
-  WELCOME_AUDIO,
   TTS_MODEL,
+  VOICE_CLIPS,
   VOICE_ID,
   VOICE_EXPRESSIVENESS,
 } from "../chat-content.js";
@@ -53,16 +52,24 @@ async function main() {
   const args = process.argv.slice(2);
   if (args.length > 1 || (args.length === 1 && args[0] !== "--force")) {
     throw new ControlledError(
-      "Usage: node scripts/generate-welcome.mjs [--force]",
+      "Usage: node scripts/generate-voice.mjs [--force]",
     );
   }
   const force = args.includes("--force");
   if (
-    !/^audio\/[a-zA-Z0-9_-]+\.mp3$/u.test(WELCOME_AUDIO) ||
+    !VOICE_CLIPS.length ||
+    VOICE_CLIPS.some(
+      (clip) =>
+        !/^audio\/[a-zA-Z0-9_-]+\.mp3$/u.test(clip.audio) ||
+        typeof clip.text !== "string" ||
+        !clip.text.trim() ||
+        clip.text.length > 400,
+    ) ||
+    new Set(VOICE_CLIPS.map((clip) => clip.audio)).size !== VOICE_CLIPS.length ||
     VOICE_EXPRESSIVENESS !== 3
   ) {
     throw new ControlledError(
-      "Invalid shared welcome configuration; no request sent.",
+      "Invalid shared voice configuration; no request sent.",
     );
   }
   const root = await realpath(fileURLToPath(new URL("../", import.meta.url)));
@@ -73,17 +80,21 @@ async function main() {
       "Audio directory must not be a symlink; no request sent.",
     );
   }
-  const target = path.join(root, WELCOME_AUDIO);
+  for (const clip of VOICE_CLIPS) await generate(root, clip, force);
+}
+
+async function generate(root, clip, force) {
+  const target = path.join(root, clip.audio);
   const metadataFile = `${target}.json`;
   const lockFile = `${target}.lock`;
   let lock;
   try {
-    // Prevent two invocations from paying for the same welcome concurrently.
+    // Prevent two invocations from paying for the same clip concurrently.
     lock = await open(lockFile, "wx", 0o600);
   } catch (error) {
     if (error.code === "EEXIST") {
       throw new ControlledError(
-        "Welcome generation is locked; no request sent. Check for another running generator.",
+        "Voice generation is locked; no request sent. Check for another running generator.",
       );
     }
     throw error;
@@ -111,7 +122,7 @@ async function main() {
           const metadata = JSON.parse(await readFile(metadataFile, "utf8"));
           const audio = await readFile(target);
           matches =
-            metadata.text === WELCOME_TEXT &&
+            metadata.text === clip.text &&
             metadata.model === TTS_MODEL &&
             metadata.voiceId === VOICE_ID &&
             metadata.expressiveness === VOICE_EXPRESSIVENESS &&
@@ -123,11 +134,11 @@ async function main() {
       }
       if (!matches) {
         throw new ControlledError(
-          "Welcome audio exists without matching metadata. Refusing regeneration; use --force only to authorize one new request.",
+          `${clip.audio} exists without matching metadata. Refusing regeneration; use --force only to authorize new requests.`,
         );
       }
       console.log(
-        `Already exists: ${WELCOME_AUDIO}; metadata and SHA-256 match. No request sent.`,
+        `Already exists: ${clip.audio}; metadata and SHA-256 match. No request sent.`,
       );
       return;
     }
@@ -152,7 +163,7 @@ async function main() {
         },
         body: JSON.stringify({
           model: TTS_MODEL,
-          input: WELCOME_TEXT,
+          input: clip.text,
           voice_id: VOICE_ID,
           expressiveness: VOICE_EXPRESSIVENESS,
           response_format: "mp3",
@@ -213,7 +224,7 @@ async function main() {
     }
     const hash = sha256(audio);
     const metadata = {
-      text: WELCOME_TEXT,
+      text: clip.text,
       model: TTS_MODEL,
       voiceId: VOICE_ID,
       expressiveness: VOICE_EXPRESSIVENESS,
@@ -231,7 +242,7 @@ async function main() {
     }
     await rename(tempMetadata, metadataFile);
     console.log(
-      `Generated ${WELCOME_AUDIO}: ${audio.length} bytes; SHA-256 ${hash}.`,
+      `Generated ${clip.audio}: ${audio.length} bytes; SHA-256 ${hash}.`,
     );
   } finally {
     await Promise.all(
@@ -246,7 +257,7 @@ main().catch((error) => {
   console.error(
     error instanceof ControlledError
       ? error.message
-      : "Welcome generation failed locally. Check files before retrying; no automatic retry.",
+      : "Voice generation failed locally. Check files before retrying; no automatic retry.",
   );
   process.exitCode = 1;
 });

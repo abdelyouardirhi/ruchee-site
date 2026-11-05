@@ -2,25 +2,21 @@ import {
   INTRO_CAPTIONS,
   INTRO_FACE,
   INTRO_HANDOFF_SECONDS,
-  MAX_RECORDING_SECONDS,
-  WELCOME_AUDIO,
-  WELCOME_TEXT,
+  PAINS,
+  QUESTION,
   callbackEmails,
   displayPhone,
   normalizeName,
   normalizePhone,
-  personalizedReply,
 } from "./chat-content.js";
 
-// « Parler à Léa ». Only fixed copy and a confirmed first name reach the voice
-// service; the visitor's phone and e-mail go only to /api/recap.
+// « Parler à Léa ». Léa's voice notes are fixed recordings; the visitor's
+// first name, phone, e-mail and chosen answer go only to /api/recap.
 
 const ICON = {
   play: '<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M4 2.5v11l9-5.5z"/></svg>',
   pause:
     '<svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M3.5 2.5h3v11h-3zm6 0h3v11h-3z"/></svg>',
-  mic: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 15a3.5 3.5 0 0 0 3.5-3.5v-6a3.5 3.5 0 1 0-7 0v6A3.5 3.5 0 0 0 12 15Zm6-3.5a1 1 0 1 0-2 0 4 4 0 0 1-8 0 1 1 0 1 0-2 0 6 6 0 0 0 5 5.9V20H8.5a1 1 0 1 0 0 2h7a1 1 0 1 0 0-2H13v-2.6a6 6 0 0 0 5-5.9Z"/></svg>',
-  send: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3a1 1 0 0 1 .7.3l6 6a1 1 0 1 1-1.4 1.4L13 6.4V20a1 1 0 1 1-2 0V6.4l-4.3 4.3a1 1 0 0 1-1.4-1.4l6-6A1 1 0 0 1 12 3Z"/></svg>',
 };
 
 const wait = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
@@ -63,7 +59,6 @@ function init() {
   const avatar = chat.querySelector(".chat-avatar");
   const presence = chat.querySelector("[data-call-presence]");
   const log = chat.querySelector(".chat-log");
-  const composer = chat.querySelector(".chat-composer");
   const restart = chat.querySelector("[data-call-restart]");
   const closeButton = dialog.querySelector("[data-call-close]");
   const status = dialog.querySelector("[data-call-status]");
@@ -76,10 +71,7 @@ function init() {
   let run = 0; // bumps on close/restart: stale async steps stop themselves
   let stage = "idle"; // idle | intro | chat
   let name = "";
-  let mic = null;
-  let context = null;
-  let workletReady = null;
-  const greetings = new Map();
+  let topic = "";
   let recapId = null;
 
   const say = (text) => {
@@ -273,7 +265,6 @@ function init() {
     chat.hidden = false;
     chat.classList.add("is-arriving");
     restart.hidden = true;
-    composer.hidden = true;
     if (!log.childElementCount) log.append(el("p", "chat-day", "Aujourd’hui"));
     intro.classList.add("is-closing");
     const { cx, cy, r } = fitVideo();
@@ -312,359 +303,88 @@ function init() {
     intro.getAnimations?.().forEach((a) => a.cancel());
     intro.hidden = true;
     restart.hidden = false;
-    void askName(ticket);
+    void ask(ticket);
   }
 
-  // ---------- 3. Léa asks the name (voice note) ----------
-  async function askName(ticket) {
+  // ---------- 3. Léa asks what weighs on the days (voice note) ----------
+  async function ask(ticket) {
     if (!(await typing(900, ticket))) return;
     const note = voiceNote({
       from: "lea",
-      seed: WELCOME_TEXT,
-      text: WELCOME_TEXT,
-      src: WELCOME_AUDIO,
-      duration: 2,
+      seed: QUESTION.text,
+      text: QUESTION.text,
+      src: QUESTION.audio,
+      duration: QUESTION.seconds,
     });
     add(note.msg);
-    say(`Léa : ${WELCOME_TEXT}`);
-    const started = await note.play();
-    if (started) await finished();
+    say(`Léa : ${QUESTION.text}`);
+    if (await note.play()) await finished();
     if (ticket !== run) return;
-    voiceComposer();
+    await wait(reduced.matches ? 0 : 300);
+    if (ticket !== run) return;
+    choices(ticket);
   }
 
-  // ---------- 4. Visitor answers by voice (or text) ----------
-  function voiceComposer(error = "") {
-    composer.hidden = false;
-    composer.replaceChildren();
-    const row = el("div", "composer-voice");
-    const hint = el("p", "composer-hint");
-    hint.append("Touchez le micro et dites votre prénom. ");
-    const write = el("button", "", "Écrire plutôt");
-    write.type = "button";
-    write.addEventListener("click", () => textComposer());
-    hint.append(write);
-    const button = el("button", "mic is-ready");
-    button.type = "button";
-    button.innerHTML = ICON.mic;
-    button.setAttribute("aria-label", "Dire mon prénom au micro");
-    button.addEventListener("click", () => void record());
-    row.append(hint, button);
-    composer.append(row, el("p", "composer-error", error));
-    button.focus({ preventScroll: true });
-  }
-  function textComposer(error = "", value = "") {
-    stopMic();
-    composer.hidden = false;
-    composer.replaceChildren();
-    const form = el("form", "composer-text");
-    form.noValidate = true;
-    const input = el("input");
-    input.type = "text";
-    input.name = "prenom";
-    input.autocomplete = "given-name";
-    input.placeholder = "Votre prénom";
-    input.maxLength = 60;
-    input.value = value;
-    input.setAttribute("aria-label", "Votre prénom");
-    const send = el("button", "send");
-    send.type = "submit";
-    send.innerHTML = ICON.send;
-    send.setAttribute("aria-label", "Envoyer mon prénom");
-    form.append(input, send);
-    const message = el("p", "composer-error", error);
-    form.addEventListener("submit", (event) => {
-      event.preventDefault();
-      const value = normalizeName(input.value);
-      if (!value) {
-        message.textContent = "Indiquez votre prénom avec des lettres (60 caractères maximum).";
-        input.setAttribute("aria-invalid", "true");
-        return;
-      }
-      composer.hidden = true;
-      text("me", value);
-      void greet(value, run);
+  // ---------- 4. The visitor picks an answer ----------
+  function choices(ticket) {
+    const msg = el("div", "msg from-lea choices");
+    const list = el("div", "choice-list");
+    list.setAttribute("role", "group");
+    list.setAttribute("aria-label", "Ce qui vous complique le plus les journées");
+    PAINS.forEach((pain, index) => {
+      const button = el("button", "choice");
+      button.type = "button";
+      button.style.setProperty("--i", String(index));
+      const glyph = el("span", "choice-glyph", pain.glyph);
+      glyph.setAttribute("aria-hidden", "true");
+      const words = el("span", "choice-words");
+      words.append(el("b", "", pain.label), el("small", "", pain.detail));
+      button.append(glyph, words);
+      button.addEventListener("click", () => void choose(pain, button, msg, ticket));
+      list.append(button);
     });
-    composer.append(form, message);
-    input.focus({ preventScroll: true });
+    msg.append(list);
+    add(msg);
+    say("Choisissez ce qui vous complique le plus les journées.");
+    // Focus the group, not a choice: no answer should look preselected.
+    list.tabIndex = -1;
+    list.focus({ preventScroll: true });
   }
-
-  function stopMic() {
-    if (!mic) return;
-    window.clearTimeout(mic.timer);
-    window.cancelAnimationFrame(mic.frame);
-    mic.stream?.getTracks().forEach((t) => t.stop());
-    if (mic.node) {
-      mic.node.port.onmessage = null;
-      mic.node.port.postMessage({ type: "cancel" });
-      mic.node.disconnect();
-    }
-    mic.input?.disconnect();
-    mic.analyser?.disconnect();
-    mic.mute?.disconnect();
-    mic.chunks.forEach((c) => c.fill(0));
-    mic = null;
-  }
-
-  async function record() {
-    if (mic) return;
+  async function choose(pain, button, msg, ticket) {
+    if (ticket !== run || msg.dataset.done) return;
+    msg.dataset.done = "true";
+    topic = pain.id;
     stopAudio();
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (!navigator.mediaDevices?.getUserMedia || !AudioContext || !window.AudioWorkletNode) {
-      textComposer("Le micro n’est pas disponible ici. Écrivez votre prénom.");
-      return;
-    }
-    const ticket = run;
-    context ||= new AudioContext();
-    const resumed = context.resume().catch(() => {});
-    const current = { chunks: [], samples: 0, levels: [] };
-    mic = current;
-    composer.replaceChildren(el("p", "composer-hint", "Autorisez le micro pour dire votre prénom…"));
-    try {
-      current.stream = await navigator.mediaDevices.getUserMedia({
-        audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
-        video: false,
-      });
-      await resumed;
-      workletReady ||= context.audioWorklet.addModule(
-        new URL("./voice-recorder.worklet.js", import.meta.url),
-      );
-      await workletReady;
-      if (mic !== current || ticket !== run) return;
-      current.input = context.createMediaStreamSource(current.stream);
-      current.node = new AudioWorkletNode(context, "voice-recorder", {
-        numberOfInputs: 1,
-        numberOfOutputs: 1,
-        outputChannelCount: [1],
-        processorOptions: { maxSeconds: MAX_RECORDING_SECONDS },
-      });
-      current.analyser = context.createAnalyser();
-      current.analyser.fftSize = 256;
-      current.mute = context.createGain();
-      current.mute.gain.value = 0;
-      current.node.port.onmessage = ({ data }) => {
-        if (mic !== current) return;
-        if (data.type === "samples") {
-          current.chunks.push(data.samples);
-          current.samples += data.samples.length;
-        } else if (data.type === "done") void finishRecording(current);
-      };
-      current.input.connect(current.analyser);
-      current.analyser.connect(current.node);
-      current.node.connect(current.mute);
-      current.mute.connect(context.destination);
-    } catch {
-      if (mic === current) stopMic();
-      if (ticket === run)
-        textComposer("Le micro n’a pas pu démarrer. Vous pouvez écrire votre prénom.");
-      return;
-    }
-    // Recording UI: cancel · level · timer · send
-    const row = el("div", "composer-rec");
-    const cancel = el("button", "rec-cancel", "✕");
-    cancel.type = "button";
-    cancel.setAttribute("aria-label", "Annuler l’enregistrement");
-    cancel.addEventListener("click", () => {
-      stopMic();
-      voiceComposer();
+    msg.querySelectorAll("button").forEach((choice) => {
+      choice.disabled = true;
+      choice.classList.toggle("is-chosen", choice === button);
     });
-    const level = el("div", "rec-level");
-    level.setAttribute("aria-hidden", "true");
-    const ticks = Array.from({ length: 24 }, () => level.appendChild(el("i")));
-    const timer = el("span", "rec-time", "0:00");
-    const send = el("button", "send");
-    send.type = "button";
-    send.style.width = send.style.height = "56px";
-    send.innerHTML = ICON.send;
-    send.setAttribute("aria-label", "Envoyer mon message vocal");
-    send.addEventListener("click", () => {
-      send.disabled = true;
-      current.node?.port.postMessage({ type: "stop" });
-      window.setTimeout(() => void finishRecording(current), 200);
-    });
-    row.append(cancel, level, timer, send);
-    composer.replaceChildren(row, el("p", "composer-error"));
-    send.focus({ preventScroll: true });
-    say("Micro ouvert. Dites votre prénom, puis touchez Envoyer.");
-    const buffer = new Float32Array(current.analyser.fftSize);
-    const started = performance.now();
-    const draw = () => {
-      if (mic !== current) return;
-      current.analyser.getFloatTimeDomainData(buffer);
-      let sum = 0;
-      for (const v of buffer) sum += v * v;
-      const rms = Math.min(1, Math.sqrt(sum / buffer.length) * 6);
-      current.levels.push(rms);
-      ticks.forEach((tick, i) => {
-        const v = current.levels[current.levels.length - ticks.length + i] ?? 0;
-        tick.style.height = `${4 + v * 26}px`;
-      });
-      timer.textContent = clock((performance.now() - started) / 1000);
-      current.frame = window.requestAnimationFrame(draw);
-    };
-    draw();
-    current.timer = window.setTimeout(
-      () => current.node?.port.postMessage({ type: "stop" }),
-      MAX_RECORDING_SECONDS * 1000,
-    );
+    await wait(reduced.matches ? 0 : 420);
+    if (ticket !== run) return;
+    msg.remove();
+    text("me", pain.label);
+    restart.focus({ preventScroll: true });
+    await answer(pain, ticket);
   }
 
-  function wav(current) {
-    const rate = context.sampleRate;
-    if (current.samples < rate * 0.4) throw new Error("short");
-    const samples = new Float32Array(current.samples);
-    let offset = 0;
-    for (const c of current.chunks) {
-      samples.set(c, offset);
-      offset += c.length;
-    }
-    const count = Math.min(16000 * MAX_RECORDING_SECONDS, Math.floor((samples.length * 16000) / rate));
-    const buffer = new ArrayBuffer(44 + count * 2);
-    const view = new DataView(buffer);
-    const ascii = (at, s) => [...s].forEach((ch, i) => view.setUint8(at + i, ch.charCodeAt(0)));
-    ascii(0, "RIFF");
-    view.setUint32(4, 36 + count * 2, true);
-    ascii(8, "WAVE");
-    ascii(12, "fmt ");
-    view.setUint32(16, 16, true);
-    view.setUint16(20, 1, true);
-    view.setUint16(22, 1, true);
-    view.setUint32(24, 16000, true);
-    view.setUint32(28, 32000, true);
-    view.setUint16(32, 2, true);
-    view.setUint16(34, 16, true);
-    ascii(36, "data");
-    view.setUint32(40, count * 2, true);
-    // Averaging resampler (box filter) to 16 kHz mono PCM16.
-    const ratio = rate / 16000;
-    for (let i = 0; i < count; i++) {
-      const from = Math.floor(i * ratio);
-      const to = Math.max(from + 1, Math.floor((i + 1) * ratio));
-      let v = 0;
-      for (let j = from; j < to && j < samples.length; j++) v += samples[j];
-      v = Math.max(-1, Math.min(1, v / (to - from)));
-      view.setInt16(44 + i * 2, Math.round(v * (v < 0 ? 32768 : 32767)), true);
-    }
-    samples.fill(0);
-    return buffer;
-  }
-
-  async function finishRecording(current) {
-    if (mic !== current || current.done) return;
-    current.done = true;
-    const ticket = run;
-    const seconds = current.samples / context.sampleRate;
-    let body;
-    try {
-      body = wav(current);
-    } catch {
-      stopMic();
-      voiceComposer("Je n’ai rien entendu. Touchez le micro et parlez un peu plus longtemps.");
-      return;
-    }
-    const recorded = new Blob([body.slice(0)], { type: "audio/wav" });
-    stopMic();
-    composer.hidden = true;
+  // ---------- 5. Léa answers that answer (voice note) ----------
+  async function answer(pain, ticket) {
+    presence.textContent = "enregistre un vocal…";
+    presence.classList.add("is-typing");
+    await wait(reduced.matches ? 200 : 1400);
+    presence.textContent = "Assistante virtuelle";
+    presence.classList.remove("is-typing");
+    if (ticket !== run) return;
     const note = voiceNote({
-      from: "me",
-      seed: String(seconds),
-      text: "Transcription…",
-      src: URL.createObjectURL(recorded),
-      duration: seconds,
-      pending: true,
+      from: "lea",
+      seed: pain.reply,
+      text: pain.reply,
+      src: pain.audio,
+      duration: pain.seconds,
     });
     add(note.msg);
-    let value = null;
-    try {
-      const response = await fetch("/api/voice?action=transcribe", {
-        method: "POST",
-        headers: {
-          "Content-Type": "audio/wav",
-          "X-Voice-Request-Id": crypto.randomUUID(),
-          "X-Voice-Website": "",
-        },
-        body,
-        credentials: "omit",
-        cache: "no-store",
-        redirect: "error",
-        signal: AbortSignal.timeout?.(25000),
-      });
-      if (response.ok) {
-        const result = await response.json();
-        value = result?.ok === true ? normalizeName(result.name) : null;
-      }
-    } catch {
-      value = null;
-    } finally {
-      new Uint8Array(body).fill(0);
-    }
-    if (ticket !== run) return;
-    if (!value) {
-      note.setText("Prénom non reconnu");
-      if (!(await typing(700, ticket))) return;
-      text("lea", "Je n’ai pas bien entendu. Écrivez-moi votre prénom ici.");
-      textComposer();
-      return;
-    }
-    note.setText(value);
-    const meta = el("p", "msg-meta");
-    const edit = el("button", "", "Ce n’est pas ça ? Corriger");
-    edit.type = "button";
-    edit.addEventListener("click", () => {
-      run++;
-      stopAudio();
-      meta.remove();
-      log.querySelectorAll(".after-name").forEach((n) => n.remove());
-      textComposer("", value);
-    });
-    meta.append(edit);
-    note.msg.append(meta);
-    void greet(value, ticket);
-  }
-
-  // ---------- 5. Léa: « Bonjour X… » (personalized voice note) ----------
-  async function loadGreeting(value) {
-    if (!greetings.has(value)) {
-      greetings.set(
-        value,
-        (async () => {
-          const response = await fetch("/api/voice?action=greet", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: value, requestId: crypto.randomUUID(), website: "" }),
-            credentials: "omit",
-            cache: "no-store",
-            redirect: "error",
-            signal: AbortSignal.timeout?.(25000),
-          });
-          if (!response.ok || !response.headers.get("content-type")?.startsWith("audio/mpeg"))
-            throw new Error("voice");
-          return URL.createObjectURL(await response.blob());
-        })(),
-      );
-    }
-    return greetings.get(value);
-  }
-  async function greet(value, ticket) {
-    name = value;
-    const reply = personalizedReply(value);
-    const pending = loadGreeting(value).catch(() => null);
-    presence.textContent = "enregistre un vocal…";
-    const [src] = await Promise.all([pending, wait(reduced.matches ? 200 : 1200)]);
-    presence.textContent = "Assistante virtuelle";
-    if (ticket !== run) return;
-    if (src) {
-      const note = voiceNote({ from: "lea", seed: reply, text: reply, src, duration: 7 });
-      note.msg.classList.add("after-name");
-      add(note.msg);
-      say(`Léa : ${reply}`);
-      if (await note.play()) await finished();
-    } else {
-      if (!(await typing(800, ticket))) return;
-      text("lea", reply).classList.add("after-name");
-      say(`Léa : ${reply}`);
-      await wait(1200);
-    }
+    say(`Léa : ${pain.reply}`);
+    if (await note.play()) await finished();
     if (ticket !== run) return;
     contactCard(ticket);
   }
@@ -680,13 +400,21 @@ function init() {
     return input;
   }
   function contactCard(ticket) {
-    const msg = el("div", "msg from-lea after-name");
+    const msg = el("div", "msg from-lea");
     const card = el("form", "card");
     card.noValidate = true;
     card.append(
       el("h3", "", "Être rappelé par Ruchée"),
       el("p", "", "Votre numéro pour vous rappeler, votre e-mail pour la confirmation."),
     );
+    const first = field(card, "call-name", "Prénom", {
+      type: "text",
+      name: "given-name",
+      autocomplete: "given-name",
+      placeholder: "Sophie",
+      maxLength: 60,
+      required: true,
+    });
     const phone = field(card, "call-phone", "Téléphone", {
       type: "tel",
       name: "tel",
@@ -726,14 +454,20 @@ function init() {
     card.append(trap, submit, error, fine);
     msg.append(card);
     add(msg);
-    phone.focus({ preventScroll: true });
-    say("Laissez votre numéro et votre e-mail pour être rappelé.");
+    first.focus({ preventScroll: true });
+    say("Laissez votre prénom, votre numéro et votre e-mail pour être rappelé.");
 
     card.addEventListener("submit", async (event) => {
       event.preventDefault();
       error.textContent = "";
-      phone.removeAttribute("aria-invalid");
-      email.removeAttribute("aria-invalid");
+      [first, phone, email].forEach((input) => input.removeAttribute("aria-invalid"));
+      const given = normalizeName(first.value);
+      if (!given) {
+        first.setAttribute("aria-invalid", "true");
+        error.textContent = "Indiquez votre prénom avec des lettres (60 caractères maximum).";
+        first.focus();
+        return;
+      }
       const tel = normalizePhone(phone.value);
       const mail = email.value.trim().toLowerCase();
       if (!tel) {
@@ -756,7 +490,14 @@ function init() {
         const response = await fetch("/api/recap", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name, phone: tel, email: mail, website: trap.value, requestId: recapId }),
+          body: JSON.stringify({
+            name: given,
+            phone: tel,
+            email: mail,
+            topic,
+            website: trap.value,
+            requestId: recapId,
+          }),
           credentials: "omit",
           cache: "no-store",
           redirect: "error",
@@ -768,6 +509,7 @@ function init() {
       }
       if (ticket !== run) return;
       if (result?.ok) {
+        name = given;
         msg.remove();
         await sent(tel, mail, ticket);
         return;
@@ -775,7 +517,7 @@ function init() {
       submit.disabled = false;
       submit.textContent = "Être rappelé";
       if (result?.code === "invalid") {
-        error.textContent = "Vérifiez votre numéro et votre e-mail.";
+        error.textContent = "Vérifiez votre prénom, votre numéro et votre e-mail.";
         recapId = null;
         return;
       }
@@ -783,6 +525,7 @@ function init() {
       error.textContent = "";
       card.remove();
       msg.remove();
+      name = given;
       await notSent(tel, ticket);
     });
   }
@@ -790,11 +533,11 @@ function init() {
   // ---------- 7. The e-mail, shown as sent ----------
   async function sent(tel, mail, ticket) {
     const shown = displayPhone(tel);
-    text("me", `${shown} · ${mail}`).classList.add("after-name");
+    text("me", `${shown} · ${mail}`);
     await wait(reduced.matches ? 100 : 500);
     if (ticket !== run) return;
-    const message = callbackEmails({ name, phone: tel, email: mail }).visitor;
-    const card = el("article", "msg mail after-name");
+    const message = callbackEmails({ name, phone: tel, email: mail, topic }).visitor;
+    const card = el("article", "msg mail");
     card.setAttribute("aria-label", "E-mail envoyé");
     const top = el("div", "mail-top");
     top.append(el("span", "", "E-mail"), el("span", "mail-sent", "Envoyé ✓"));
@@ -810,7 +553,7 @@ function init() {
     card.append(top, dl, el("p", "mail-body", body));
     add(card);
     if (!(await typing(900, ticket))) return;
-    text("lea", `C’est noté, ${name}. Nous vous rappelons au ${shown}.`).classList.add("after-name");
+    text("lea", `C’est noté, ${name}. Nous vous rappelons au ${shown}.`);
     say(`E-mail envoyé. Nous vous rappelons au ${shown}.`);
   }
   async function notSent(tel, ticket) {
@@ -823,7 +566,7 @@ function init() {
       "lea",
       ["L’envoi n’a pas abouti. Écrivez-nous à ", link, " : nous vous rappelons au plus vite."],
       true,
-    ).classList.add("after-name");
+    );
     say("L’envoi n’a pas abouti. Écrivez-nous à contact@ruchee.fr.");
   }
 
@@ -831,12 +574,10 @@ function init() {
   function reset() {
     run++;
     stopAudio();
-    stopMic();
     video.pause();
     log.replaceChildren();
-    composer.replaceChildren();
-    composer.hidden = true;
     name = "";
+    topic = "";
     recapId = null;
   }
   function open(withSound) {
@@ -844,7 +585,7 @@ function init() {
     // Unlock the shared <audio> inside the click, so later voice notes can play.
     if (withSound) {
       audio.muted = true;
-      audio.src = WELCOME_AUDIO;
+      audio.src = QUESTION.audio;
       audio.play().then(
         () => {
           audio.pause();
@@ -860,10 +601,6 @@ function init() {
   }
   function close() {
     stopAudio();
-    if (mic) {
-      stopMic();
-      voiceComposer();
-    }
     video.pause();
     if (stage === "intro") {
       stage = "idle";
@@ -890,10 +627,6 @@ function init() {
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden || !dialog.open) return;
     stopAudio();
-    if (mic) {
-      stopMic();
-      voiceComposer();
-    }
     video.pause();
   });
   window.addEventListener("resize", () => {

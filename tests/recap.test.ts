@@ -95,6 +95,7 @@ function payload(overrides: Record<string, unknown> = {}) {
     name: "Jeanne Martin",
     phone: "06 12 34 56 78",
     email: "jeanne@example.test",
+    topic: "absences",
     website: "",
     requestId: randomUUID(),
     ...overrides,
@@ -332,6 +333,11 @@ test(
           42,
           {},
           { ...payload(), extra: "anything" },
+          { ...payload(), topic: undefined },
+          ...["", "Absences", "inconnu", 1, null, ["absences"]].map((topic) => ({
+            ...payload(),
+            topic,
+          })),
         ];
         for (const name of [
           "",
@@ -665,6 +671,7 @@ test(
             name: "Éloïse D’Arcy-André",
             phone: "+33612345678",
             email: `eloise+${suffix}@example.test`,
+            topic: "absences",
           });
           const team = calls.at(-1)!;
           assert.deepEqual(Object.keys(team).sort(), [
@@ -686,6 +693,10 @@ test(
           assert.equal(team.subject, expected.team.subject);
           assert.equal(team.textContent, expected.team.text);
           assert.match(team.textContent, /06 12 34 56 78/u);
+          assert.match(
+            team.textContent,
+            /Ce qui lui complique les journées : Les absences de dernière minute/u,
+          );
           const copy = copies.at(-1)!;
           assert.deepEqual(copy.to, [
             {
@@ -783,6 +794,7 @@ test(
           { name: "Other Name" },
           { phone: "07 98 76 54 32" },
           { email: "other@example.test" },
+          { topic: "recrutement" },
         ]) {
           await expectReply(await send({ ...data, ...change }), 409, "invalid");
         }
@@ -1073,7 +1085,13 @@ test(
             .digest("hex");
         assert.equal(
           row.fingerprint,
-          hmac("callback-v1", data.name, "+33612345678", data.email),
+          hmac(
+            "callback-v2",
+            data.name,
+            "+33612345678",
+            data.email,
+            data.topic,
+          ),
         );
         assert.equal(row.email_hash, hmac("email", data.email));
         assert.equal(row.ip_hash, hmac("ip", "192.0.2.1"));

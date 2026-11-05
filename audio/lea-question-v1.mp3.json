@@ -1,0 +1,8 @@
+{
+  "text": "Dites-moi : qu’est-ce qui vous complique le plus les journées ?",
+  "model": "voxtral-mini-tts-3-0",
+  "voiceId": "01a1ad29-4e34-76ed-96b7-2ac31605240d",
+  "expressiveness": 3,
+  "sha256": "37fc2b2e15c134fe3884f40f9edc168be22a2b88261c8d11d85c4389e3efd2e7",
+  "generatedAt": "2026-11-05T20:43:02.331Z"
+}

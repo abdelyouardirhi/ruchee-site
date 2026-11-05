@@ -18,7 +18,6 @@ const assets = [
   "map-demo.js",
   "lea-call.js",
   "chat-content.js",
-  "voice-recorder.worklet.js",
   "brand",
   "fonts",
   "images",
@@ -53,7 +52,7 @@ await writeFile(
   JSON.stringify(
     {
       version: 1,
-      include: ["/api/recap", "/api/voice"],
+      include: ["/api/recap"],
       exclude: [],
     },
     null,
@@ -61,5 +60,5 @@ await writeFile(
   ),
 );
 console.log(
-  "Public site built in dist. Only /api/recap and /api/voice run Pages Functions.",
+  "Public site built in dist. Only /api/recap runs a Pages Function.",
 );

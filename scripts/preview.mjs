@@ -114,11 +114,8 @@ function readBody(req) {
 }
 
 async function main() {
-  const args = process.argv.slice(2);
-  if (args.length > 1 || (args.length === 1 && args[0] !== "--live-voice")) {
-    console.error(
-      "Usage: node --import tsx scripts/preview.mjs [--live-voice]",
-    );
+  if (process.argv.length > 2) {
+    console.error("Usage: node --import tsx scripts/preview.mjs");
     process.exitCode = 1;
     return;
   }
@@ -134,30 +131,16 @@ async function main() {
     process.exitCode = 1;
     return;
   }
-  const limitValue = process.env.VOICE_DAILY_LIMIT ?? "5";
-  const limit = Number(limitValue);
-  if (
-    !/^[1-9][0-9]*$/u.test(limitValue) ||
-    !Number.isInteger(limit) ||
-    limit > 50
-  ) {
-    console.error("VOICE_DAILY_LIMIT must be an integer from 1 to 50.");
-    process.exitCode = 1;
-    return;
-  }
   const root = await realpath(fileURLToPath(new URL("../", import.meta.url)));
   const dist = path.join(root, "dist");
   if ((await realpath(dist)) !== dist)
     throw new Error("Build directory must not be a symlink");
   if (!(await stat(path.join(dist, "index.html"))).isFile())
     throw new Error("Build missing");
-  const [{ onRequest: recap }, { onRequest: voice }] = await Promise.all([
-    import("../functions/api/recap.ts"),
-    import("../functions/api/voice.ts"),
-  ]);
+  const { onRequest: recap } = await import("../functions/api/recap.ts");
   const db = new SQLiteD1();
   try {
-    for (const migration of ["0001_recap.sql", "0002_voice.sql"]) {
+    for (const migration of ["0001_recap.sql"]) {
       db.sqlite.exec(
         await readFile(path.join(root, "migrations", migration), "utf8"),
       );
@@ -168,10 +151,6 @@ async function main() {
   }
   const hosts = new Set([`127.0.0.1:${port}`, `localhost:${port}`]);
   const origins = [...hosts].map((host) => `http://${host}`).join(",");
-  const voiceKey = args.includes("--live-voice")
-    ? process.env.MISTRAL_VOICE_API_KEY?.trim()
-    : undefined;
-  const voiceEnabled = Boolean(voiceKey);
   const sharedEnv = {
     RECAP_DB: db,
     RECAP_HASH_KEY:
@@ -179,19 +158,13 @@ async function main() {
     RECAP_ALLOWED_ORIGINS: origins,
     RECAP_EMAIL_ENABLED: "false",
   };
-  // Email credentials are deliberately not loaded; the voice key only reaches voice.
-  const voiceEnv = {
-    ...sharedEnv,
-    VOICE_ENABLED: voiceEnabled ? "true" : "false",
-    VOICE_DAILY_LIMIT: String(limit),
-    MISTRAL_VOICE_API_KEY: voiceKey,
-  };
+  // Email credentials are deliberately not loaded: the preview never sends e-mail.
   let stopping = false;
   const pending = new Set();
   const server = createServer(
     { headersTimeout: 10_000, requestTimeout: 20_000 },
     (req, res) => {
-      // Never log request paths, headers, bodies, names, email addresses or audio.
+      // Never log request paths, headers, bodies, names, phone numbers or email addresses.
       const task = handle(req, res)
         .catch(() => {
           if (!res.headersSent && !res.destroyed)
@@ -222,21 +195,13 @@ async function main() {
     } catch {
       return rejectRequest(req, res, 400, "Adresse invalide.");
     }
-    if (pathname === "/api/recap" || pathname === "/api/voice") {
+    if (pathname === "/api/recap") {
       if (req.method !== "POST")
         return rejectRequest(req, res, 405, "Utilisez POST.", {
           Allow: "POST",
         });
       if (req.headers.origin !== url.origin)
         return rejectRequest(req, res, 400, "Origine invalide.");
-      if (pathname === "/api/voice" && !voiceEnabled) {
-        return rejectRequest(
-          req,
-          res,
-          503,
-          "La voix est indisponible pour le moment.",
-        );
-      }
       let body;
       try {
         body = await readBody(req);
@@ -253,10 +218,7 @@ async function main() {
       // Loopback-only preview, not a production proxy or trustworthy client IP source.
       headers.set("CF-Connecting-IP", "127.0.0.1");
       const request = new Request(url, { method: "POST", headers, body });
-      const response =
-        pathname === "/api/recap"
-          ? await recap({ request, env: sharedEnv })
-          : await voice({ request, env: voiceEnv });
+      const response = await recap({ request, env: sharedEnv });
       if (res.destroyed) return;
       const bytes = Buffer.from(await response.arrayBuffer());
       res.writeHead(response.status, Object.fromEntries(response.headers));
@@ -339,17 +301,14 @@ async function main() {
       `Preview: http://127.0.0.1:${port} (also http://localhost:${port})`,
     );
     console.log(
-      `Voice: ${voiceEnabled ? "enabled on explicit browser submission" : "disabled"}; email: disabled.`,
-    );
-    console.log(
-      `In-memory quotas reset on every restart. Voice daily limit: ${limit} per action; per-IP cap: 5/hour/action. No startup provider requests.`,
+      "E-mail: disabled (the callback form answers « unavailable »). In-memory quotas reset on every restart.",
     );
   });
 }
 
 main().catch(() => {
   console.error(
-    "Preview setup failed. Build dist and provide both API handlers/migrations; run with Node 22 and --import tsx.",
+    "Preview setup failed. Build dist and provide the API handler/migration; run with Node 22 and --import tsx.",
   );
   process.exitCode = 1;
 });

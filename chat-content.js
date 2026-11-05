@@ -13,15 +13,79 @@ export const INTRO_HANDOFF_SECONDS = 7;
 // Where Léa's face sits in the video frame (fractions of width / height).
 export const INTRO_FACE = { x: 0.297, y: 0.3, radius: 0.2 };
 
-// First voice note in the chat (static file, generated once).
-export const WELCOME_TEXT = "Et vous, comment vous appelez-vous ?";
-export const WELCOME_AUDIO = "audio/lea-prenom-v2.mp3";
-
+// Léa's voice notes are fixed recordings (scripts/generate-voice.mjs): nothing
+// the visitor types is ever spoken, and no voice service runs on the site.
 export const TTS_MODEL = "voxtral-mini-tts-3-0";
-export const TRANSCRIBE_MODEL = "voxtral-mini-transcribe-3-0";
 export const VOICE_ID = "01a1ad29-4e34-76ed-96b7-2ac31605240d"; // « Léa (vidéo) », cloned from the intro video
 export const VOICE_EXPRESSIVENESS = 3;
-export const MAX_RECORDING_SECONDS = 6;
+
+// First voice note in the chat.
+export const QUESTION = {
+  text: "Dites-moi : qu’est-ce qui vous complique le plus les journées ?",
+  audio: "audio/lea-question-v1.mp3",
+  seconds: 3,
+};
+
+const CLOSING = "Laissez-moi vos coordonnées : nous vous rappelons pour en parler.";
+
+// The visitor picks one answer; Léa replies with the matching voice note.
+export const PAINS = [
+  {
+    id: "absences",
+    glyph: "!",
+    label: "Les absences de dernière minute",
+    detail: "Un appel à 5h, un site à couvrir",
+    reply: `Ah, je vois. Avec moi à vos côtés, une absence à 5h du matin, je m’en occupe : je propose le créneau à votre équipe sur WhatsApp, et vous êtes prévenu dès que le site est couvert. ${CLOSING}`,
+    audio: "audio/lea-absences-v1.mp3",
+    seconds: 15,
+  },
+  {
+    id: "recrutement",
+    glyph: "+",
+    label: "Recruter, encore et encore",
+    detail: "Des candidats qui ne répondent plus",
+    reply: `Ah, je vois. Avec moi à vos côtés, chaque candidat reçoit une réponse en moins d’une minute. Je réunis ses réponses à vos critères, et c’est vous qui décidez qui rencontrer. ${CLOSING}`,
+    audio: "audio/lea-recrutement-v1.mp3",
+    seconds: 14,
+  },
+  {
+    id: "telephone",
+    glyph: "↗",
+    label: "Le téléphone qui sonne sans arrêt",
+    detail: "Horaires, adresses, retards",
+    reply: `Ah, je vois. Avec moi à vos côtés, je réponds à votre équipe à toute heure, dans sa langue : horaires, adresses, retards. Et je ne vous dérange que pour ce qui compte. ${CLOSING}`,
+    audio: "audio/lea-telephone-v1.mp3",
+    seconds: 15,
+  },
+  {
+    id: "sites",
+    glyph: "✓",
+    label: "Savoir si chaque site est couvert",
+    detail: "Qui est arrivé, où, à quelle heure",
+    reply: `Ah, je vois. Avec moi à vos côtés, vous recevez chaque matin le point de 8h : qui est arrivé, et quels sites restent à couvrir. Vous commencez la journée sans surprise. ${CLOSING}`,
+    audio: "audio/lea-sites-v1.mp3",
+    seconds: 16,
+  },
+  {
+    id: "autre",
+    glyph: "…",
+    label: "Autre chose",
+    detail: "On en parle de vive voix",
+    reply: `Je vois. Chaque entreprise a ses casse-têtes. Avec moi à vos côtés, vous déléguez les messages du quotidien : absences, recrutement, consignes. ${CLOSING}`,
+    audio: "audio/lea-autre-v1.mp3",
+    seconds: 13,
+  },
+];
+
+export function painById(id) {
+  return PAINS.find((pain) => pain.id === id) ?? null;
+}
+
+// Every fixed recording, for the generator.
+export const VOICE_CLIPS = [
+  QUESTION,
+  ...PAINS.map((pain) => ({ text: pain.reply, audio: pain.audio })),
+];
 
 export function normalizeName(value) {
   if (typeof value !== "string" || /[\p{Cc}\p{Cf}]/u.test(value)) return null;
@@ -34,11 +98,6 @@ export function normalizeName(value) {
   )
     return null;
   return name;
-}
-
-// Spoken by Léa with the visitor's confirmed first name (≤ 240 characters).
-export function personalizedReply(name) {
-  return `Bonjour ${name}, ravie de faire votre connaissance. Laissez-moi votre numéro : nous restons en contact et nous vous rappelons.`;
 }
 
 // French numbers (0X XX XX XX XX, +33, 0033) or any international +number.
@@ -64,15 +123,16 @@ export function displayPhone(e164) {
 }
 
 // The two e-mails sent when a visitor asks to be called back.
-export function callbackEmails({ name, phone, email }) {
+export function callbackEmails({ name, phone, email, topic }) {
   const shown = displayPhone(phone);
+  const pain = painById(topic);
   return {
     visitor: {
       subject: `${name}, nous vous rappelons`,
       text: [
         `Bonjour ${name},`,
         "Merci pour votre échange avec Léa, l’assistante virtuelle de Ruchée.",
-        `Nous avons bien noté votre numéro : ${shown}. Une personne de l’équipe Ruchée vous rappelle pour vous présenter Léa et voir avec vous comment elle peut aider votre entreprise.`,
+        `Nous avons bien noté votre numéro : ${shown}. Une personne de l’équipe Ruchée vous rappelle pour parler de ce qui vous complique les journées${pain && pain.id !== "autre" ? ` (« ${pain.label.toLowerCase()} »)` : ""} et voir avec vous comment Léa peut aider votre entreprise.`,
         "En attendant, une question ? Répondez simplement à cet e-mail.",
         "L’équipe Ruchée\nhttps://ruchee.fr",
         "Cet e-mail vous est envoyé une seule fois, à votre demande. Vous n’êtes inscrit à aucune newsletter.",
@@ -82,7 +142,7 @@ export function callbackEmails({ name, phone, email }) {
       subject: `À rappeler : ${name} · ${shown}`,
       text: [
         "Nouveau contact depuis « Parler à Léa » sur ruchee.fr.",
-        `Prénom : ${name}\nTéléphone : ${shown}\nE-mail : ${email}`,
+        `Prénom : ${name}\nTéléphone : ${shown}\nE-mail : ${email}\nCe qui lui complique les journées : ${pain ? pain.label : "non indiqué"}`,
         "Répondre à cet e-mail écrit directement à ce contact.",
       ].join("\n\n"),
     },
