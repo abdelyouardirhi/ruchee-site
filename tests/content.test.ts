@@ -57,12 +57,12 @@ test("both e-mails name the chosen answer", () => {
   });
   assert.match(emails.team.text, /Recruter, encore et encore/u);
   assert.match(emails.visitor.text, /« recruter, encore et encore »/u);
-  const other = callbackEmails({
+  const all = callbackEmails({
     name: "Sophie",
     phone: "+33612345678",
     email: "sophie@example.test",
-    topic: "autre",
+    topic: "tout",
   });
-  assert.match(other.team.text, /Autre chose/u);
-  assert.doesNotMatch(other.visitor.text, /«/u);
+  assert.match(all.team.text, /Tout à la fois/u);
+  assert.match(all.visitor.text, /« tout à la fois »/u);
 });

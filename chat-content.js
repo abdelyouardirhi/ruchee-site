@@ -67,13 +67,13 @@ export const PAINS = [
     seconds: 16,
   },
   {
-    id: "autre",
-    glyph: "…",
-    label: "Autre chose",
-    detail: "On en parle de vive voix",
-    reply: `Je vois. Chaque entreprise a ses casse-têtes. Avec moi à vos côtés, vous déléguez les messages du quotidien : absences, recrutement, consignes. ${CLOSING}`,
-    audio: "audio/lea-autre-v1.mp3",
-    seconds: 13,
+    id: "tout",
+    glyph: "★",
+    label: "Tout à la fois",
+    detail: "Absences, recrutement, appels, suivi",
+    reply: `Ah, je vois : tout à la fois. Avec moi à vos côtés, je gère les absences, je réponds aux candidats et à votre équipe, et chaque matin, je vous fais le point de 8h. Vous gardez les décisions, je prends les messages. ${CLOSING}`,
+    audio: "audio/lea-tout-v1.mp3",
+    seconds: 17,
   },
 ];
 
@@ -132,7 +132,7 @@ export function callbackEmails({ name, phone, email, topic }) {
       text: [
         `Bonjour ${name},`,
         "Merci pour votre échange avec Léa, l’assistante virtuelle de Ruchée.",
-        `Nous avons bien noté votre numéro : ${shown}. Une personne de l’équipe Ruchée vous rappelle pour parler de ce qui vous complique les journées${pain && pain.id !== "autre" ? ` (« ${pain.label.toLowerCase()} »)` : ""} et voir avec vous comment Léa peut aider votre entreprise.`,
+        `Nous avons bien noté votre numéro : ${shown}. Une personne de l’équipe Ruchée vous rappelle pour parler de ce qui vous complique les journées${pain ? ` (« ${pain.label.toLowerCase()} »)` : ""} et voir avec vous comment Léa peut aider votre entreprise.`,
         "En attendant, une question ? Répondez simplement à cet e-mail.",
         "L’équipe Ruchée\nhttps://ruchee.fr",
         "Cet e-mail vous est envoyé une seule fois, à votre demande. Vous n’êtes inscrit à aucune newsletter.",
