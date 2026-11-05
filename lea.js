@@ -184,6 +184,7 @@
   var generation = 0;
   var phase = "idle";
   var autoplay = true;
+  var chatOpen = Boolean(document.querySelector("#lea-chat[open]"));
   var scenarioIndex = 0;
   var sceneVisible = false;
 
@@ -345,7 +346,7 @@
   }
 
   function playScene(explicit) {
-    if (!sceneSupported || reduced || document.hidden) return;
+    if (!sceneSupported || reduced || document.hidden || chatOpen) return;
     if (!sceneVisible && !explicit) return;
     clearScene();
     cover.classList.remove("is-visible");
@@ -572,7 +573,7 @@
     miniScenes.forEach(function (mini) {
       mini.element.classList.toggle(
         "is-active",
-        mini.visible && !reduced && !document.hidden,
+        mini.visible && !reduced && !document.hidden && !chatOpen,
       );
     });
   }
@@ -618,6 +619,13 @@
       motionQuery.addListener(motionChanged);
     }
   }
+
+  window.addEventListener("lea-chat-visibility", function (event) {
+    chatOpen = event.detail.open;
+    if (chatOpen) completeScene();
+    else if (autoplay && phase === "idle") playScene();
+    updateMiniScenes();
+  });
 
   document.addEventListener("visibilitychange", function () {
     if (document.hidden) {

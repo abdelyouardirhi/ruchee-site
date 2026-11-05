@@ -1,0 +1,17 @@
+# Disabled by default. Never commit real credentials or use real email in tests.
+RECAP_EMAIL_ENABLED=false
+BREVO_API_KEY=
+# Set a sender verified in Brevo before enabling email.
+RECAP_SENDER_EMAIL=
+# Use a random secret of at least 32 characters; rotation resets hash-based limits.
+RECAP_HASH_KEY=
+# Exact comma-separated origins, no wildcard, path or trailing slash.
+RECAP_ALLOWED_ORIGINS=http://localhost:8788
+RECAP_DAILY_LIMIT=50
+VOICE_ENABLED=false
+# Dedicated direct Mistral key, never an Azure/text key.
+MISTRAL_VOICE_API_KEY=
+VOICE_DAILY_LIMIT=50
+# RECAP_DB is a Cloudflare D1 binding, not a string variable.
+# Bind it and apply 0001_recap.sql and 0002_voice.sql before enabling endpoints.
+# CF-Connecting-IP must be supplied by Cloudflare; there is no fallback header.

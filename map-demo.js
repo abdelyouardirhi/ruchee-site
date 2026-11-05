@@ -220,6 +220,7 @@
   var generation = 0;
   var userPaused = motion.matches;
   var pageHidden = false;
+  var chatOpen = Boolean(document.querySelector("#lea-chat[open]"));
   var inView = false;
   var mapVisible = false;
   var nearView = false;
@@ -395,7 +396,7 @@
   }
 
   function syncPlayback() {
-    var canPlay = inView && !document.hidden && !pageHidden && !userPaused;
+    var canPlay = inView && !document.hidden && !pageHidden && !userPaused && !chatOpen;
     if (!canPlay) {
       generation += 1;
       window.clearTimeout(timer);
@@ -405,7 +406,7 @@
       timer = window.setTimeout(function () {
         if (token !== generation) return;
         timer = null;
-        if (!inView || document.hidden || pageHidden || userPaused) {
+        if (!inView || document.hidden || pageHidden || userPaused || chatOpen) {
           syncPlayback();
           return;
         }
@@ -489,7 +490,7 @@
   }
 
   function createMap(L) {
-    if (map || !mapNode || document.hidden || pageHidden || !mapVisible) return;
+    if (map || !mapNode || document.hidden || pageHidden || !mapVisible || chatOpen) return;
     map = L.map(mapNode, {
       zoomControl: false,
       attributionControl: true,
@@ -675,6 +676,12 @@
     var resizeObserver = new ResizeObserver(resize);
     resizeObserver.observe(mapNode);
   }
+  window.addEventListener("lea-chat-visibility", function (event) {
+    chatOpen = event.detail.open;
+    if (!chatOpen) loadMap();
+    syncPlayback();
+  });
+
   document.addEventListener("visibilitychange", function () {
     if (document.hidden) {
       window.clearTimeout(resizeTimer);

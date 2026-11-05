@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="fr">
+<html lang="fr" data-theme="light">
   <head>
     <meta charset="utf-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
     />
     <title>Ruchée · Recrutement et remplacements pour le nettoyage</title>
     <meta
@@ -12,17 +12,8 @@
       content="Léa aide les entreprises de nettoyage à préparer les candidatures, organiser les remplacements et suivre les prestations chez les particuliers comme les professionnels. Sans nouvelle application pour vos équipes."
     />
     <link rel="canonical" href="https://ruchee.fr/" />
-    <meta
-      name="theme-color"
-      media="(prefers-color-scheme: light)"
-      content="#fbf7ec"
-    />
-    <meta
-      name="theme-color"
-      media="(prefers-color-scheme: dark)"
-      content="#14130f"
-    />
-    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#fbf7ec" />
+    <meta name="color-scheme" content="light" />
     <link rel="icon" href="brand/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="brand/apple-icon-180.png" />
     <meta property="og:type" content="website" />
@@ -55,8 +46,15 @@
       media="print"
     />
     <noscript><link rel="stylesheet" href="map-demo.css" /></noscript>
+    <link
+      id="chat-demo-styles"
+      rel="stylesheet"
+      href="chat-demo.css"
+      media="print"
+    />
     <script src="lea.js" defer></script>
     <script src="map-demo.js" defer></script>
+    <script src="chat-demo.js" type="module"></script>
   </head>
   <body>
     <a class="skip" href="#contenu">Aller au contenu</a>
@@ -64,10 +62,7 @@
       <div class="container nav-bar">
         <a class="logo" href="/" aria-label="Ruchée, accueil"
           ><picture
-            ><source
-              srcset="brand/ruchee-logo-reversed.svg"
-              media="(prefers-color-scheme: dark)" />
-            <img
+            ><img
               src="brand/ruchee-logo.svg"
               alt="Ruchée"
               width="411"
@@ -87,10 +82,8 @@
           ><a href="#lea">Vos prestations</a><a href="#tarifs">Tarifs</a
           ><a href="#faq">Questions</a>
         </nav>
-        <a
-          class="button button-ink nav-cta"
-          href="mailto:contact@ruchee.fr?subject=Demande%20de%20d%C3%A9mo%20Ruch%C3%A9e"
-          >Demander une démo <span aria-hidden="true">↗</span></a
+        <a class="button button-ink nav-cta" href="#parler-a-lea" data-lea-open
+          >Parler à Léa <span aria-hidden="true">→</span></a
         >
       </div>
     </header>
@@ -115,16 +108,13 @@
               <li>Les pointages de l'équipe réunis au même endroit</li>
             </ul>
             <div class="actions" data-reveal>
-              <a
-                class="button button-accent"
-                href="mailto:contact@ruchee.fr?subject=Demande%20de%20d%C3%A9mo%20Ruch%C3%A9e"
-                >Demander une démo <span aria-hidden="true">↗</span></a
-              ><a class="text-link" href="#carte"
-                >Voir Léa agir <span aria-hidden="true">↗</span></a
+              <a class="button button-accent" href="#parler-a-lea" data-lea-open
+                >Parler à Léa <span aria-hidden="true">→</span></a
               >
             </div>
             <p class="fine" data-reveal>
-              Léa est une assistante virtuelle. Vous choisissez qui recruter.
+              Léa est une assistante virtuelle. Écrivez-lui ou dites-lui votre
+              prénom.
             </p>
           </div>
           <div
@@ -486,10 +476,8 @@
                 </p>
               </li>
             </ol>
-            <a
-              class="text-link"
-              href="mailto:contact@ruchee.fr?subject=Demande%20de%20d%C3%A9mo%20Ruch%C3%A9e"
-              >Demander une démo <span aria-hidden="true">↗</span></a
+            <a class="text-link" href="#parler-a-lea" data-lea-open
+              >Parler à Léa <span aria-hidden="true">→</span></a
             >
           </div>
           <div class="recruitment-preview" data-reveal>
@@ -1131,10 +1119,8 @@
                 <li>Pointage QR et tableau de bord</li>
                 <li>Utilisateurs du tableau de bord illimités</li>
               </ul>
-              <a
-                class="button button-ink"
-                href="mailto:contact@ruchee.fr?subject=Demande%20de%20d%C3%A9mo%20Ruch%C3%A9e"
-                >Demander une démo <span aria-hidden="true">↗</span></a
+              <a class="button button-ink" href="#parler-a-lea" data-lea-open
+                >Parler à Léa <span aria-hidden="true">→</span></a
               >
               <p class="fine">
                 Salariés comptés sur le planning le 1er du mois. Usage
@@ -1158,10 +1144,8 @@
                 En échange : vos retours, quelques chiffres avant / après et un
                 témoignage, pour mesurer ce qui change vraiment.
               </p>
-              <a
-                class="text-link"
-                href="mailto:contact@ruchee.fr?subject=Entreprise%20pilote%20Ruch%C3%A9e"
-                >Devenir entreprise pilote <span aria-hidden="true">↗</span></a
+              <a class="text-link" href="#parler-a-lea" data-lea-open
+                >Parler à Léa <span aria-hidden="true">→</span></a
               >
               <div class="pilot-foot">
                 Démonstration d'abord. Nous convenons ensemble des fonctions
@@ -1287,19 +1271,16 @@
           <div class="closing-copy" data-reveal>
             <img src="brand/ruchee-symbol.svg" alt="" width="40" height="40" />
             <h2 id="closing-title">
-              Montrons-le sur<br /><span class="mark">vos situations.</span>
+              Faites connaissance.<br /><span class="mark"
+                >Léa vous répond.</span
+              >
             </h2>
             <p>
-              Un recrutement à lancer ? Des remplacements à organiser ?
-              Dites-nous comment vous travaillez. La démonstration partira de
-              là.
+              Quelques mots pour découvrir Léa et ce qu'elle peut faire pour
+              votre entreprise. Votre e-mail reste facultatif.
             </p>
-            <a
-              class="button button-accent"
-              href="mailto:contact@ruchee.fr?subject=Demande%20de%20d%C3%A9mo%20Ruch%C3%A9e"
-              >Demander une démo <span aria-hidden="true">↗</span></a
-            ><a class="contact-address" href="mailto:contact@ruchee.fr"
-              >contact@ruchee.fr</a
+            <a class="button button-accent" href="#parler-a-lea" data-lea-open
+              >Parler à Léa <span aria-hidden="true">→</span></a
             >
           </div>
           <div class="closing-note" aria-hidden="true">
@@ -1315,16 +1296,71 @@
           </div>
         </div>
       </section>
+      <section
+        class="section"
+        id="parler-a-lea"
+        data-chat-fallback
+        aria-labelledby="chat-fallback-title"
+      >
+        <div class="container">
+          <div class="section-heading">
+            <h2 id="chat-fallback-title">
+              Découvrez Léa<br /><span class="mark">avec un exemple.</span>
+            </h2>
+            <p>
+              Le chat vocal nécessite JavaScript. Vous pouvez écouter l'accueil
+              ou lire cette présentation, sans laisser vos coordonnées.
+            </p>
+          </div>
+          <audio
+            controls
+            preload="none"
+            src="audio/lea-accueil-v1.mp3"
+            aria-label="Écouter l'accueil de Léa"
+          ></audio>
+          <div class="faq">
+            <details>
+              <summary>Une absence à remplacer</summary>
+              <p>
+                Un salarié prévient Léa. Elle propose le créneau aux salariés
+                disponibles de l'entreprise. Le premier qui accepte est affecté
+                au remplacement. Le patron valide le message destiné au client.
+                Si personne n'accepte, il est prévenu : aucun remplacement n'est
+                garanti.
+              </p>
+            </details>
+            <details>
+              <summary>Une candidature à préparer</summary>
+              <p>
+                Vous choisissez les questions liées au poste. Léa recueille les
+                réponses et les réunit critère par critère. Vous choisissez qui
+                rencontrer. Léa propose ensuite vos créneaux d'entretien, sans
+                note attribuée par l'IA ni rejet automatique.
+              </p>
+            </details>
+            <details>
+              <summary>Les prestations à suivre</summary>
+              <p>
+                Les salariés enregistrent leurs arrivées par QR code et
+                signalent leurs retards. Le patron retrouve les pointages et les
+                créneaux à couvrir dans le point de 8h. La carte montre les
+                sites, jamais la position des salariés.
+              </p>
+            </details>
+          </div>
+          <p class="fine">
+            Exemples fictifs. Pour une question sur Ruchée :
+            <a href="mailto:contact@ruchee.fr">contact@ruchee.fr</a>.
+          </p>
+        </div>
+      </section>
     </main>
     <footer>
       <div class="container">
         <div class="footer-top">
           <a class="logo" href="/" aria-label="Ruchée, accueil"
             ><picture
-              ><source
-                srcset="brand/ruchee-logo-reversed.svg"
-                media="(prefers-color-scheme: dark)" />
-              <img
+              ><img
                 src="brand/ruchee-logo.svg"
                 alt="Ruchée"
                 width="411"
@@ -1337,7 +1373,7 @@
           ><a href="#recrutement">Recrutement</a
           ><a href="#lea">Vos prestations</a><a href="#tarifs">Tarifs</a
           ><a href="#faq">Questions</a
-          ><a href="mailto:contact@ruchee.fr">Contact</a>
+          ><a href="#parler-a-lea" data-lea-open>Parler à Léa</a>
         </nav>
         <div class="footer-bottom">
           <p>© 2026 Ruchée · Abdellah Ouardirhi EI · SIREN 132 405 952</p>
@@ -1346,5 +1382,72 @@
         </div>
       </div>
     </footer>
+
+    <dialog
+      class="lea-chat"
+      id="lea-chat"
+      aria-labelledby="lea-chat-title"
+      aria-describedby="lea-chat-description"
+      tabindex="-1"
+    >
+      <div class="voice-shell">
+        <header class="voice-header">
+          <div>
+            <h2 id="lea-chat-title">Un instant avec Léa</h2>
+            <p>Assistante virtuelle de Ruchée</p>
+          </div>
+          <button
+            class="voice-close"
+            type="button"
+            data-chat-close
+            aria-label="Fermer la conversation"
+          >
+            <span aria-hidden="true">×</span>
+          </button>
+        </header>
+        <div class="voice-presence">
+          <div class="lea-orb" data-lea-orb aria-hidden="true">
+            <img src="brand/ruchee-symbol.svg" alt="" width="76" height="76" />
+          </div>
+          <p data-voice-state>Un message pour vous</p>
+        </div>
+        <div
+          class="voice-log"
+          data-chat-log
+          role="log"
+          aria-label="Votre échange avec Léa"
+          aria-live="polite"
+          aria-relevant="additions"
+          tabindex="0"
+        ></div>
+        <div class="voice-composer" data-chat-composer></div>
+        <footer class="voice-footer">
+          <span
+            >Voix de synthèse ·
+            <a
+              href="confidentialite.html"
+              target="_blank"
+              rel="noopener"
+              aria-label="Confidentialité (nouvel onglet)"
+              >Confidentialité</a
+            ></span
+          ><button type="button" data-chat-reset disabled>
+            Nouvel échange
+          </button>
+        </footer>
+      </div>
+      <p class="sr-only" id="lea-chat-description">
+        L'accueil est préenregistré. Léa prononce ensuite une réponse avec votre
+        prénom. Le micro est facultatif et limité à six secondes. La carte
+        e-mail apparaît dans la conversation.
+      </p>
+      <p
+        class="sr-only"
+        data-chat-status
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      ></p>
+    </dialog>
   </body>
 </html>
