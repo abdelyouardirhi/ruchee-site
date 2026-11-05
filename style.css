@@ -20,7 +20,7 @@
   --on-miel: #1b1a16;
 }
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     color-scheme: dark;
     --miel-soft: #3f3311;
     --encre: #f3eee2;
