@@ -160,21 +160,13 @@ summary:focus-visible {
   top: 10px;
 }
 .split-ground {
+  /* Crème on the left melts into white on the right: no hard edge. */
   background: linear-gradient(
     90deg,
-    var(--creme) 0 var(--split),
-    var(--blanc) var(--split)
+    var(--creme) 0 calc(var(--split) - 160px),
+    var(--blanc) calc(var(--split) + 160px)
   );
   position: relative;
-}
-.split-ground:before {
-  content: "";
-  position: absolute;
-  left: var(--split);
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: var(--ligne);
 }
 .nav-bar {
   display: flex;
@@ -2198,9 +2190,6 @@ footer a {
   }
   .split-ground {
     background: var(--creme);
-  }
-  .split-ground:before {
-    display: none;
   }
   .nav-bar {
     min-height: 74px;
