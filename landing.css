@@ -2642,3 +2642,46 @@ img[src$="lea-avatar.jpg"] {
   border-radius: 50%;
   object-fit: cover;
 }
+
+/* Phones and small tablets: title → button → the phones → the details. */
+@media (max-width: 880px) {
+  .hero-copy {
+    display: contents;
+  }
+  .hero-grid > * {
+    min-width: 0;
+  }
+  .hero-copy .eyebrow {
+    order: 1;
+    margin-top: 28px;
+  }
+  .hero-copy h1 {
+    order: 2;
+  }
+  .hero-copy .actions {
+    order: 3;
+    justify-content: center;
+    margin-top: 28px;
+  }
+  .hero-copy .fine {
+    order: 4;
+    margin: 12px 0 28px;
+    text-align: center;
+  }
+  .hero-visual {
+    order: 5;
+    border-bottom: 1px solid var(--ligne);
+  }
+  .hero-copy .hero-lead {
+    order: 6;
+    margin-top: 32px;
+  }
+  .hero-copy .hero-checks {
+    order: 7;
+  }
+  .hero-copy .no-install {
+    order: 8;
+    justify-self: start;
+    margin: 4px 0 40px;
+  }
+}
