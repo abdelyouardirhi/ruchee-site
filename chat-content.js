@@ -1,15 +1,15 @@
-// Fixed wording for « Parler à Léa ». The server builds every spoken sentence from
-// these functions: a visitor can never make Léa say an arbitrary text.
+// Fixed wording for « Parler à Léa », shared by the page and /api/recap.
+// Léa never says anything that is not written here.
 
-// Intro video (Léa on camera, 10 s). The transcript is shown as captions.
-export const INTRO_VIDEO = "video/lea-intro.mp4";
-export const INTRO_POSTER = "video/lea-intro-poster.jpg";
+// Intro video (Léa on camera, trimmed to her words: 5.9 s). Shown with captions.
+export const INTRO_VIDEO = "video/lea-intro-v2.mp4";
+export const INTRO_POSTER = "video/lea-intro-v2-poster.jpg";
 export const INTRO_CAPTIONS = [
-  { start: 0.9, end: 3.9, text: "Bonjour, je suis Léa, l’assistante de Ruchée." },
-  { start: 4.1, end: 6.6, text: "Je suis à votre écoute pour vous aider." },
+  { start: 0.5, end: 3.4, text: "Bonjour, je suis Léa, l’assistante de Ruchée." },
+  { start: 3.6, end: 5.5, text: "Je suis à votre écoute pour vous aider." },
 ];
-// The last seconds are a silent smile: the chat starts here.
-export const INTRO_HANDOFF_SECONDS = 7;
+// Right after her last word, the circle closes on her face.
+export const INTRO_HANDOFF_SECONDS = 5.4;
 // Where Léa's face sits in the video frame (fractions of width / height).
 export const INTRO_FACE = { x: 0.297, y: 0.3, radius: 0.2 };
 
