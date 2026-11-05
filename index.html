@@ -46,15 +46,10 @@
       media="print"
     />
     <noscript><link rel="stylesheet" href="map-demo.css" /></noscript>
-    <link
-      id="chat-demo-styles"
-      rel="stylesheet"
-      href="chat-demo.css"
-      media="print"
-    />
+    <link rel="stylesheet" href="lea-call.css" />
     <script src="lea.js" defer></script>
     <script src="map-demo.js" defer></script>
-    <script src="chat-demo.js" type="module"></script>
+    <script src="lea-call.js" type="module"></script>
   </head>
   <body>
     <a class="skip" href="#contenu">Aller au contenu</a>
@@ -1384,66 +1379,82 @@
     </footer>
 
     <dialog
-      class="lea-chat"
-      id="lea-chat"
-      aria-labelledby="lea-chat-title"
-      aria-describedby="lea-chat-description"
-      tabindex="-1"
+      class="lea-call"
+      id="lea-call"
+      aria-label="Parler à Léa, assistante virtuelle de Ruchée"
     >
-      <div class="voice-shell">
-        <header class="voice-header">
-          <div>
-            <h2 id="lea-chat-title">Un instant avec Léa</h2>
-            <p>Assistante virtuelle de Ruchée</p>
+      <button
+        class="call-close"
+        type="button"
+        data-call-close
+        aria-label="Fermer"
+      >
+        <span aria-hidden="true">×</span>
+      </button>
+      <div class="call-phone">
+        <div class="call-island" aria-hidden="true"></div>
+        <div class="call-screen">
+          <div class="call-intro">
+            <video
+              src="video/lea-intro.mp4"
+              poster="video/lea-intro-poster.jpg"
+              playsinline
+              preload="none"
+              aria-label="Léa se présente"
+            ></video>
+            <p class="call-ai-label">Léa · assistante virtuelle (IA)</p>
+            <p class="call-caption" aria-live="polite"></p>
+            <div class="call-intro-actions">
+              <button class="call-pill" type="button" data-call-sound hidden>
+                Activer le son
+              </button>
+              <button class="call-pill" type="button" data-call-skip>
+                Passer
+              </button>
+            </div>
           </div>
-          <button
-            class="voice-close"
-            type="button"
-            data-chat-close
-            aria-label="Fermer la conversation"
-          >
-            <span aria-hidden="true">×</span>
-          </button>
-        </header>
-        <div class="voice-presence">
-          <div class="lea-orb" data-lea-orb aria-hidden="true">
-            <img src="brand/ruchee-symbol.svg" alt="" width="76" height="76" />
+          <div class="call-chat" hidden>
+            <header class="chat-head">
+              <img
+                class="chat-avatar"
+                src="images/lea-avatar.jpg"
+                alt=""
+                width="40"
+                height="40"
+              />
+              <div class="chat-who">
+                <strong>Léa</strong>
+                <span data-call-presence>Assistante virtuelle</span>
+              </div>
+              <button
+                class="chat-restart"
+                type="button"
+                data-call-restart
+                aria-label="Recommencer"
+                title="Recommencer"
+              >
+                <span aria-hidden="true">↺</span>
+              </button>
+            </header>
+            <div
+              class="chat-log"
+              role="log"
+              aria-label="Votre échange avec Léa"
+              tabindex="0"
+            ></div>
+            <div class="chat-composer" hidden></div>
+            <p class="call-footnote">
+              Voix de synthèse ·
+              <a href="confidentialite.html" target="_blank" rel="noopener"
+                >Confidentialité</a
+              >
+            </p>
           </div>
-          <p data-voice-state>Un message pour vous</p>
         </div>
-        <div
-          class="voice-log"
-          data-chat-log
-          role="log"
-          aria-label="Votre échange avec Léa"
-          aria-live="polite"
-          aria-relevant="additions"
-          tabindex="0"
-        ></div>
-        <div class="voice-composer" data-chat-composer></div>
-        <footer class="voice-footer">
-          <span
-            >Voix de synthèse ·
-            <a
-              href="confidentialite.html"
-              target="_blank"
-              rel="noopener"
-              aria-label="Confidentialité (nouvel onglet)"
-              >Confidentialité</a
-            ></span
-          ><button type="button" data-chat-reset disabled>
-            Nouvel échange
-          </button>
-        </footer>
       </div>
-      <p class="sr-only" id="lea-chat-description">
-        L'accueil est préenregistré. Léa prononce ensuite une réponse avec votre
-        prénom. Le micro est facultatif et limité à six secondes. La carte
-        e-mail apparaît dans la conversation.
-      </p>
       <p
         class="sr-only"
-        data-chat-status
+        data-call-status
         role="status"
         aria-live="polite"
         aria-atomic="true"

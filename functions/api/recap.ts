@@ -1,4 +1,8 @@
-import { normalizeName, PRESENTATION } from "../../chat-content.js";
+import {
+  callbackEmails,
+  normalizeName,
+  normalizePhone,
+} from "../../chat-content.js";
 
 export interface D1Result<T = unknown> {
   success: boolean;
@@ -21,6 +25,8 @@ export interface Env {
   RECAP_EMAIL_ENABLED?: string;
   BREVO_API_KEY?: string;
   RECAP_SENDER_EMAIL?: string;
+  // Who receives the « à rappeler » e-mail. Defaults to contact@ruchee.fr.
+  RECAP_TEAM_EMAIL?: string;
   RECAP_HASH_KEY?: string;
   RECAP_ALLOWED_ORIGINS?: string;
   RECAP_DAILY_LIMIT?: string;
@@ -40,12 +46,13 @@ type Code =
 type State = "pending" | "accepted" | "failed" | "unknown";
 interface Submission {
   name: string;
+  phone: string;
   email: string;
   requestId: string;
 }
 
 const MESSAGES: Record<Code, string> = {
-  sent: "Votre présentation a été acceptée pour envoi.",
+  sent: "C'est noté : nous vous rappelons.",
   invalid: "La demande n'est pas valide. Vérifiez les informations saisies.",
   unavailable: "L'envoi est indisponible pour le moment. Réessayez plus tard.",
   limited: "La limite d'envoi est atteinte. Réessayez demain.",
@@ -145,7 +152,7 @@ async function submission(request: Request): Promise<Submission | null> {
     );
     if (!data || typeof data !== "object" || Array.isArray(data)) return null;
     const fields = data as Record<string, unknown>;
-    const keys = ["name", "email", "website", "requestId"];
+    const keys = ["name", "phone", "email", "website", "requestId"];
     if (
       Object.keys(fields).length !== keys.length ||
       !keys.every((key) => Object.hasOwn(fields, key))
@@ -153,6 +160,8 @@ async function submission(request: Request): Promise<Submission | null> {
       return null;
     const name = normalizeName(fields.name);
     if (!name) return null;
+    const phone = normalizePhone(fields.phone);
+    if (!phone) return null;
     const email = emailAddress(fields.email);
     if (!email || fields.website !== "") return null;
     if (
@@ -164,6 +173,7 @@ async function submission(request: Request): Promise<Submission | null> {
       return null;
     return {
       name,
+      phone,
       email,
       requestId: fields.requestId.toLowerCase(),
     };
@@ -191,6 +201,7 @@ export async function onRequest({
   if (!data || request.signal.aborted) return reply(400, "invalid");
 
   const sender = emailAddress(env.RECAP_SENDER_EMAIL);
+  const team = emailAddress(env.RECAP_TEAM_EMAIL ?? "contact@ruchee.fr");
   const origins = env.RECAP_ALLOWED_ORIGINS?.split(",").map((value) =>
     value.trim(),
   );
@@ -201,6 +212,7 @@ export async function onRequest({
     env.RECAP_EMAIL_ENABLED !== "true" ||
     !env.BREVO_API_KEY?.trim() ||
     !sender ||
+    !team ||
     !env.RECAP_HASH_KEY ||
     env.RECAP_HASH_KEY.trim().length < 32 ||
     !env.RECAP_DB ||
@@ -250,7 +262,7 @@ export async function onRequest({
       ).join("");
     };
     const [fingerprint, ipHash, emailHash] = await Promise.all([
-      hash("presentation-v1", data.name, data.email),
+      hash("callback-v1", data.name, data.phone, data.email),
       hash("ip", ip),
       hash("email", data.email),
     ]);
@@ -311,59 +323,59 @@ export async function onRequest({
       }
     }
 
-    const textContent = [
-      `Bonjour ${data.name},`,
-      "Voici votre présentation de Léa, l'assistante virtuelle de Ruchée.",
-      PRESENTATION.title,
-      PRESENTATION.intro,
-      ...PRESENTATION.points,
-      PRESENTATION.note,
-      "Une question ? contact@ruchee.fr\nhttps://ruchee.fr",
-      "Cet e-mail unique vous est envoyé à votre demande. Vous n'êtes inscrit à aucune newsletter ni liste de prospection.",
-    ].join("\n\n");
-    let state: State = "unknown";
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
-    try {
-      const response = await fetch("https://api.brevo.com/v3/smtp/email", {
-        method: "POST",
-        redirect: "error",
-        signal: controller.signal,
-        headers: {
-          "Content-Type": "application/json",
-          "api-key": env.BREVO_API_KEY,
-        },
-        body: JSON.stringify({
-          sender: { name: "Léa · Ruchée", email: sender },
-          replyTo: { email: "contact@ruchee.fr" },
-          to: [{ email: data.email }],
-          subject: "Votre présentation Ruchée",
-          textContent,
-        }),
-      });
-      if (!response.ok) {
-        state =
-          response.status >= 500 || response.status === 408
+    const emails = callbackEmails(data);
+    const brevo = async (message: Record<string, unknown>): Promise<State> => {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+      try {
+        const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+          method: "POST",
+          redirect: "error",
+          signal: controller.signal,
+          headers: {
+            "Content-Type": "application/json",
+            "api-key": env.BREVO_API_KEY!,
+          },
+          body: JSON.stringify({
+            sender: { name: "Léa · Ruchée", email: sender },
+            ...message,
+          }),
+        });
+        if (!response.ok)
+          return response.status >= 500 || response.status === 408
             ? "unknown"
             : "failed";
-      } else {
         const result: unknown = await response.json();
-        if (
-          result &&
+        return result &&
           typeof result === "object" &&
           !Array.isArray(result) &&
           "messageId" in result &&
           typeof result.messageId === "string" &&
           result.messageId.trim()
-        )
-          state = "accepted";
+          ? "accepted"
+          : "unknown";
+      } catch {
+        // A network error can occur after acceptance. Never automatically resend.
+        return "unknown";
+      } finally {
+        clearTimeout(timeout);
       }
-    } catch {
-      // A network error can occur after acceptance. Never automatically resend.
-      state = "unknown";
-    } finally {
-      clearTimeout(timeout);
-    }
+    };
+    // The team e-mail is the callback request itself: its outcome is the state.
+    const state = await brevo({
+      replyTo: { email: data.email, name: data.name },
+      to: [{ email: team }],
+      subject: emails.team.subject,
+      textContent: emails.team.text,
+    });
+    // The visitor's confirmation is a courtesy copy, sent once, never retried.
+    if (state === "accepted")
+      await brevo({
+        replyTo: { email: team },
+        to: [{ email: data.email, name: data.name }],
+        subject: emails.visitor.subject,
+        textContent: emails.visitor.text,
+      });
     try {
       await db
         .prepare(

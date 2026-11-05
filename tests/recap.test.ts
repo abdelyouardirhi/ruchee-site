@@ -4,7 +4,7 @@ import { getEventListeners } from "node:events";
 import { readFileSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
 import { test, type TestContext } from "node:test";
-import { PRESENTATION } from "../chat-content.js";
+import { callbackEmails } from "../chat-content.js";
 import {
   onRequest,
   type D1Database,
@@ -93,6 +93,7 @@ class SQLiteD1 implements D1Database {
 function payload(overrides: Record<string, unknown> = {}) {
   return {
     name: "Jeanne Martin",
+    phone: "06 12 34 56 78",
     email: "jeanne@example.test",
     website: "",
     requestId: randomUUID(),
@@ -118,8 +119,8 @@ function request(
 
 interface Email {
   sender: { name: string; email: string };
-  replyTo: { email: string };
-  to: { email: string }[];
+  replyTo: { email: string; name?: string };
+  to: { email: string; name?: string }[];
   subject: string;
   textContent: string;
 }
@@ -136,10 +137,15 @@ function fixture(t: TestContext) {
     RECAP_ALLOWED_ORIGINS: `${ORIGIN}, https://other.example`,
     RECAP_DB: db,
   };
+  // calls: the « à rappeler » e-mails to the team (one per accepted request).
+  // copies: the visitor confirmations, sent only after the team e-mail.
   const calls: Email[] = [];
+  const copies: Email[] = [];
   const provider = {
     respond: async (_init: RequestInit): Promise<Response> =>
       Response.json({ messageId: "test-message-id" }, { status: 201 }),
+    copy: async (_init: RequestInit): Promise<Response> =>
+      Response.json({ messageId: "test-copy-id" }, { status: 201 }),
   };
   t.mock.method(
     globalThis,
@@ -156,9 +162,11 @@ function fixture(t: TestContext) {
       );
       assert.ok(init.signal instanceof AbortSignal);
       const email = JSON.parse(String(init.body)) as Email;
+      const toTeam = email.to[0].email === "contact@ruchee.fr";
+      const visitor = toTeam ? email.replyTo.email : email.to[0].email;
       // No unsigned/unreserved outbound call, even under concurrent requests.
       const recipientHash = createHmac("sha256", HASH_KEY)
-        .update(JSON.stringify(["email", email.to[0].email]))
+        .update(JSON.stringify(["email", visitor]))
         .digest("hex");
       assert.equal(
         db
@@ -169,6 +177,10 @@ function fixture(t: TestContext) {
           ).length,
         1,
       );
+      if (!toTeam) {
+        copies.push(email);
+        return provider.copy(init);
+      }
       calls.push(email);
       return provider.respond(init);
     },
@@ -181,7 +193,7 @@ function fixture(t: TestContext) {
     data: unknown = payload(),
     headers: Record<string, string> = {},
   ) => onRequest({ request: request(data, headers), env });
-  return { db, env, calls, provider, send, clock };
+  return { db, env, calls, copies, provider, send, clock };
 }
 
 async function expectReply(
@@ -378,7 +390,9 @@ test(
           null,
         ])
           invalid.push(payload({ requestId }));
-        for (const field of ["name", "email", "website", "requestId"]) {
+        for (const phone of ["123", "06 12 34", "+33 0 12", "abc", 612345678, null])
+          invalid.push(payload({ phone }));
+        for (const field of ["name", "phone", "email", "website", "requestId"]) {
           const data: Record<string, unknown> = payload();
           delete data[field];
           invalid.push(data);
@@ -635,56 +649,57 @@ test(
     );
 
     await t.test(
-      "only immutable presentation content, fixed headers, one recipient and plain text",
+      "team e-mail first (reply-to visitor), then one visitor copy, fixed headers, plain text",
       async (t) => {
-        const { send, calls, db } = fixture(t);
-        const presentationBefore = structuredClone(PRESENTATION);
+        const { send, calls, copies, db } = fixture(t);
         for (const suffix of ["one", "two", "three"]) {
           const data = payload({
             name: "  Éloïse D’Arcy-Andre\u0301  ",
+            phone: " +33 6 12.34-56 78 ",
             email: `  ELOISE+${suffix}@EXAMPLE.TEST  `,
           });
           const before = structuredClone(data);
           await expectReply(await send(data), 200, "sent");
           assert.deepEqual(data, before);
-          const email = calls.at(-1)!;
-          assert.deepEqual(Object.keys(email).sort(), [
+          const expected = callbackEmails({
+            name: "Éloïse D’Arcy-André",
+            phone: "+33612345678",
+            email: `eloise+${suffix}@example.test`,
+          });
+          const team = calls.at(-1)!;
+          assert.deepEqual(Object.keys(team).sort(), [
             "replyTo",
             "sender",
             "subject",
             "textContent",
             "to",
           ]);
-          assert.deepEqual(email.sender, {
+          assert.deepEqual(team.sender, {
             name: "Léa · Ruchée",
             email: "sender@example.test",
           });
-          assert.deepEqual(email.replyTo, { email: "contact@ruchee.fr" });
-          assert.deepEqual(email.to, [
-            { email: `eloise+${suffix}@example.test` },
+          assert.deepEqual(team.to, [{ email: "contact@ruchee.fr" }]);
+          assert.deepEqual(team.replyTo, {
+            email: `eloise+${suffix}@example.test`,
+            name: "Éloïse D’Arcy-André",
+          });
+          assert.equal(team.subject, expected.team.subject);
+          assert.equal(team.textContent, expected.team.text);
+          assert.match(team.textContent, /06 12 34 56 78/u);
+          const copy = copies.at(-1)!;
+          assert.deepEqual(copy.to, [
+            {
+              email: `eloise+${suffix}@example.test`,
+              name: "Éloïse D’Arcy-André",
+            },
           ]);
-          assert.equal(email.subject, "Votre présentation Ruchée");
-          assert.ok(
-            email.textContent.startsWith("Bonjour Éloïse D’Arcy-André,"),
-          );
-          for (const text of [
-            PRESENTATION.title,
-            PRESENTATION.intro,
-            PRESENTATION.note,
-            ...PRESENTATION.points,
-          ])
-            assert.ok(email.textContent.includes(text));
-          assert.doesNotMatch(
-            email.textContent,
-            /fictif|démonstration guidée/u,
-          );
-          assert.match(email.textContent, /assistante virtuelle/u);
-          assert.match(email.textContent, /e-mail unique.*à votre demande/u);
-          assert.match(
-            email.textContent,
-            /aucune newsletter ni liste de prospection/u,
-          );
-          assert.match(email.textContent, /https:\/\/ruchee\.fr/u);
+          assert.deepEqual(copy.replyTo, { email: "contact@ruchee.fr" });
+          assert.equal(copy.subject, expected.visitor.subject);
+          assert.equal(copy.textContent, expected.visitor.text);
+          assert.ok(copy.textContent.startsWith("Bonjour Éloïse D’Arcy-André,"));
+          assert.match(copy.textContent, /assistante virtuelle/u);
+          assert.match(copy.textContent, /une seule fois, à votre demande/u);
+          assert.match(copy.textContent, /aucune newsletter/u);
         }
         for (const field of [
           "to",
@@ -705,9 +720,45 @@ test(
             "invalid",
           );
         }
-        assert.deepEqual(PRESENTATION, presentationBefore);
         assert.equal(calls.length, 3);
+        assert.equal(copies.length, 3);
         assert.equal(db.rows().length, 3);
+      },
+    );
+
+    await t.test(
+      "RECAP_TEAM_EMAIL changes the team recipient; an invalid one disables sending",
+      async (t) => {
+        const { send, env, calls, copies } = fixture(t);
+        env.RECAP_TEAM_EMAIL = "not an address";
+        await expectReply(await send(), 503, "unavailable", true);
+        assert.equal(calls.length + copies.length, 0);
+      },
+    );
+
+    await t.test(
+      "a failed visitor copy never changes the outcome nor triggers a resend",
+      async (t) => {
+        const { send, provider, calls, copies, db } = fixture(t);
+        provider.copy = async () =>
+          Response.json({ message: "down" }, { status: 500 });
+        const data = payload();
+        await expectReply(await send(data), 200, "sent");
+        await expectReply(await send(data), 200, "sent");
+        assert.equal(calls.length, 1);
+        assert.equal(copies.length, 1);
+        assert.equal(db.rows()[0].state, "accepted");
+      },
+    );
+
+    await t.test(
+      "no visitor copy when the team e-mail is not accepted",
+      async (t) => {
+        const { send, provider, copies } = fixture(t);
+        provider.respond = async () =>
+          Response.json({ message: "bad" }, { status: 400 });
+        await expectReply(await send(), 503, "unavailable", true);
+        assert.equal(copies.length, 0);
       },
     );
 
@@ -730,6 +781,7 @@ test(
         );
         for (const change of [
           { name: "Other Name" },
+          { phone: "07 98 76 54 32" },
           { email: "other@example.test" },
         ]) {
           await expectReply(await send({ ...data, ...change }), 409, "invalid");
@@ -1021,7 +1073,7 @@ test(
             .digest("hex");
         assert.equal(
           row.fingerprint,
-          hmac("presentation-v1", data.name, data.email),
+          hmac("callback-v1", data.name, "+33612345678", data.email),
         );
         assert.equal(row.email_hash, hmac("email", data.email));
         assert.equal(row.ip_hash, hmac("ip", "192.0.2.1"));

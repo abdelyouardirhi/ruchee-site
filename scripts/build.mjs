@@ -13,10 +13,10 @@ const assets = [
   "landing.css",
   "style.css",
   "map-demo.css",
-  "chat-demo.css",
+  "lea-call.css",
   "lea.js",
   "map-demo.js",
-  "chat-demo.js",
+  "lea-call.js",
   "chat-content.js",
   "voice-recorder.worklet.js",
   "brand",
@@ -24,6 +24,7 @@ const assets = [
   "images",
   "vendor",
   "audio",
+  "video",
 ];
 
 // Only public assets enter dist; Functions, secrets, migrations and tests stay out.

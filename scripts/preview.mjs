@@ -56,6 +56,8 @@ const MIME = {
   ".svg": "image/svg+xml",
   ".webp": "image/webp",
   ".mp3": "audio/mpeg",
+  ".mp4": "video/mp4",
+  ".jpg": "image/jpeg",
   ".png": "image/png",
   ".woff2": "font/woff2",
 };

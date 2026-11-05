@@ -5,7 +5,7 @@
   "type": "module",
   "engines": { "node": ">=22.15.0" },
   "scripts": {
-    "check": "tsc --noEmit && node --check lea.js && node --check map-demo.js && node --check chat-demo.js && node --check voice-recorder.worklet.js && node --import tsx --test tests/recap.test.ts tests/voice.test.ts",
+    "check": "tsc --noEmit && node --check lea.js && node --check map-demo.js && node --check lea-call.js && node --check voice-recorder.worklet.js && node --import tsx --test tests/recap.test.ts tests/voice.test.ts",
     "build": "node scripts/build.mjs",
     "preview": "node --import tsx scripts/preview.mjs",
     "generate-welcome": "node scripts/generate-welcome.mjs"
