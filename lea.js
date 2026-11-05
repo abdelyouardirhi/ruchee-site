@@ -113,7 +113,7 @@
       time: "14:10",
       cover: "images/nettoyage-logement.webp",
       avatar: "images/avatar-client.svg",
-      image: "brand/ruchee-symbol.svg",
+      image: "images/lea-avatar.jpg",
       rows: [
         ["◷", "Changement d'horaire", "Le client Martin, à 15h"],
         ["↗", "Message préparé", "Léa vous montre le texte"],
@@ -136,8 +136,8 @@
       subtitle: "Le point de 8h",
       time: "8:00",
       cover: "images/nettoyage-miroir.webp",
-      avatar: "brand/ruchee-symbol.svg",
-      image: "brand/ruchee-symbol.svg",
+      avatar: "images/lea-avatar.jpg",
+      image: "images/lea-avatar.jpg",
       rows: [
         ["✓", "Maison Martin", "Karima est arrivée à 7h58"],
         ["!", "Bureaux Dupont", "Créneau encore à couvrir"],

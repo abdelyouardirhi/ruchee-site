@@ -2610,3 +2610,9 @@ footer a {
     translate: none;
   }
 }
+
+/* Léa's photo avatar, wherever Léa appears. */
+img[src$="lea-avatar.jpg"] {
+  border-radius: 50%;
+  object-fit: cover;
+}

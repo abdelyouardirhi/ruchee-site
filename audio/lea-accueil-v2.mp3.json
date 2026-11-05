@@ -1,0 +1,8 @@
+{
+  "text": "Bonjour, je suis Léa, l’assistante virtuelle de Ruchée. Et vous, comment vous appelez-vous ?",
+  "model": "voxtral-mini-tts-3-0",
+  "voiceId": "01a1ad29-4e34-76ed-96b7-2ac31605240d",
+  "expressiveness": 3,
+  "sha256": "682c4ed319600775e2a2dd96c6c43ebdecb312003582e7e1e68b565617e4a6a1",
+  "generatedAt": "2026-11-05T20:33:08.989814+00:00"
+}

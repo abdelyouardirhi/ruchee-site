@@ -345,10 +345,14 @@
   border-bottom: 1px solid var(--ligne);
 }
 .map-lea-avatar {
-  background: var(--blanc);
   border: 1px solid var(--ligne);
-  border-radius: 13px;
-  padding: 8px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+.map-lea-avatar img {
+  display: block;
+  width: 46px;
+  height: 46px;
 }
 .map-lea-heading h3 {
   font-size: 19px;
