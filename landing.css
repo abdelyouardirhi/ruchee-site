@@ -2685,3 +2685,15 @@ img[src$="lea-avatar.jpg"] {
     margin: 4px 0 40px;
   }
 }
+
+/* Desktop: the white half runs to the screen edge, so the phones' column does
+   too, and the animation is centred in the white half, not in the content box. */
+@media (min-width: 881px) {
+  .hero {
+    overflow-x: clip;
+  }
+  .hero-visual {
+    margin-right: calc(-1 * max(var(--gutter), (100vw - var(--content)) / 2));
+    padding-inline: 24px;
+  }
+}
