@@ -48,7 +48,15 @@
       crossorigin
     />
     <link rel="stylesheet" href="landing.css" />
+    <link
+      id="map-demo-styles"
+      rel="stylesheet"
+      href="map-demo.css"
+      media="print"
+    />
+    <noscript><link rel="stylesheet" href="map-demo.css" /></noscript>
     <script src="lea.js" defer></script>
+    <script src="map-demo.js" defer></script>
   </head>
   <body>
     <a class="skip" href="#contenu">Aller au contenu</a>
@@ -111,8 +119,8 @@
                 class="button button-accent"
                 href="mailto:contact@ruchee.fr?subject=Demande%20de%20d%C3%A9mo%20Ruch%C3%A9e"
                 >Demander une démo <span aria-hidden="true">↗</span></a
-              ><a class="text-link" href="#ecouter"
-                >Écouter Léa <span aria-hidden="true">▷</span></a
+              ><a class="text-link" href="#carte"
+                >Voir Léa agir <span aria-hidden="true">↗</span></a
               >
             </div>
             <p class="fine" data-reveal>
@@ -557,113 +565,242 @@
         </div>
       </section>
 
-      <section class="section" id="ecouter" aria-labelledby="listen-title">
+      <section
+        class="section map-demo"
+        id="carte"
+        data-map-demo
+        aria-labelledby="map-title"
+      >
         <div class="container">
           <div class="section-heading" data-reveal>
-            <h2 id="listen-title">
-              Vous êtes entre deux sites ?<br /><span class="mark"
-                >Envoyez un vocal.</span
+            <h2 id="map-title">
+              Vos sites, sous les yeux.<br /><span class="mark"
+                >Léa passe à l'action.</span
               >
             </h2>
             <p>
-              Vos salariés expliquent leur situation à la voix. Vous pouvez
-              écouter le point du matin sans ouvrir un tableau de bord.
+              Une absence, une arrivée, un retard. Regardez Léa coordonner
+              l'équipe pendant que les situations évoluent sur la carte.
             </p>
           </div>
-          <div class="conversation-layout">
-            <div class="context-photo" data-reveal>
-              <img
-                src="images/nettoyage-bureau.webp"
-                alt="Nettoyage d'un plan de travail avec un chiffon, photo d'illustration"
-                width="880"
-                height="587"
-                loading="lazy"
-              />
-              <div class="context-caption">
-                <span>Logements et locaux professionnels.</span
-                ><strong
-                  >Votre métier, sur le terrain.<br />Léa, pour les
-                  échanges.</strong
-                >
-              </div>
-              <div class="floating-note">
+
+          <div class="map-demo-app">
+            <header class="map-app-header">
+              <div class="map-company">
                 <img
                   src="brand/ruchee-symbol.svg"
                   alt=""
-                  width="30"
-                  height="30"
-                /><span><b>Léa, assistante virtuelle</b>Un message suffit</span>
+                  width="32"
+                  height="32"
+                />
+                <div>
+                  <strong>Propreté Dupont</strong
+                  ><span>Votre matinée, en un regard.</span>
+                </div>
+              </div>
+              <div class="map-demo-meta">
+                <span class="map-demo-tag">Démonstration</span
+                ><span>Toulouse · <time data-map-clock>7h42</time></span>
+              </div>
+            </header>
+            <div class="map-toolbar">
+              <div
+                class="map-scenarios"
+                role="group"
+                aria-label="Les trois situations de la démonstration"
+              >
+                <span data-map-scenario="absence" aria-current="true"
+                  ><span aria-hidden="true">01</span> Une absence</span
+                >
+                <span data-map-scenario="pointage"
+                  ><span aria-hidden="true">02</span> Une arrivée</span
+                >
+                <span data-map-scenario="retard"
+                  ><span aria-hidden="true">03</span> Un retard</span
+                >
+              </div>
+              <div class="map-counts" aria-label="Situation des six sites">
+                <span><b data-map-uncovered>1</b> à couvrir</span
+                ><span><b data-map-late>1</b> retard signalé</span
+                ><span><b data-map-arrived>3</b> arrivées</span>
               </div>
             </div>
-            <div class="voice-panel" data-reveal>
-              <p class="panel-label">Écoutez sa voix de synthèse.</p>
-              <div class="clip">
-                <button
-                  class="clip-play"
-                  data-src="audio/lea-portugais.mp3"
-                  aria-label="Écouter la réponse de Léa en portugais"
-                  aria-pressed="false"
-                  hidden
-                >
-                  <span aria-hidden="true"></span>
-                </button>
-                <div class="clip-body">
-                  <h3>À chacun sa langue.</h3>
-                  <p>Réponse à Maria · Portugais</p>
-                  <div class="clip-bar" aria-hidden="true"><span></span></div>
+
+            <div class="map-workspace">
+              <div class="map-main">
+                <div class="map-stage">
+                  <div
+                    id="demo-map"
+                    data-tile-url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    role="region"
+                    aria-label="Carte des six sites fictifs à Toulouse. Les repères représentent les sites, pas les salariés."
+                  ></div>
+                  <div class="map-location-tag">
+                    <span aria-hidden="true">◎</span> Toulouse
+                    <span>6 sites</span>
+                  </div>
+                  <div class="map-load-message">
+                    <p data-map-status role="status">
+                      Les sites de démonstration sont listés ci-dessous.
+                    </p>
+                  </div>
+                  <noscript
+                    ><p class="map-no-script">
+                      L'animation nécessite JavaScript. Les situations des sites
+                      restent lisibles ci-dessous.
+                    </p></noscript
+                  >
                 </div>
-                <a class="audio-fallback" href="audio/lea-portugais.mp3"
-                  >Écouter le fichier audio</a
+                <div
+                  class="map-site-detail"
+                  aria-label="Détail du site concerné"
                 >
-                <details class="transcript">
-                  <summary>Lire le message et sa traduction</summary>
-                  <p lang="pt-PT">
-                    Bom dia, Maria. Obrigada por avisar, as melhoras! Já estou a
-                    procurar alguém para o seu turno das seis horas, na Torre
-                    Horizon. Não se preocupe.
+                  <div class="map-site-heading">
+                    <div>
+                      <p data-map-kind>Bureaux · Jeanne-d’Arc</p>
+                      <h3 data-map-title>Résidence Horizon</h3>
+                    </div>
+                    <span
+                      class="map-status-badge"
+                      data-map-badge
+                      data-state="uncovered"
+                      >! À couvrir</span
+                    >
+                  </div>
+                  <div class="map-site-facts">
+                    <span>Créneau <b data-map-shift>8h00–11h00</b></span
+                    ><span>Salarié <b data-map-person>Maria</b></span>
+                  </div>
+                  <p class="map-site-description" data-map-detail>
+                    Maria a signalé son absence. Le créneau reste à couvrir.
                   </p>
-                  <p>
-                    Bonjour Maria, merci de prévenir, bon rétablissement. Je
-                    cherche déjà quelqu'un pour votre créneau de 6 h à la Tour
-                    Horizon. Ne vous inquiétez pas.
-                  </p>
-                </details>
-              </div>
-              <div class="clip">
-                <button
-                  class="clip-play"
-                  data-src="audio/lea-point-8h.mp3"
-                  aria-label="Écouter le point de 8h"
-                  aria-pressed="false"
-                  hidden
-                >
-                  <span aria-hidden="true"></span>
-                </button>
-                <div class="clip-body">
-                  <h3>Votre point de 8h.</h3>
-                  <p>Le résumé du matin · Français</p>
-                  <div class="clip-bar" aria-hidden="true"><span></span></div>
                 </div>
-                <a class="audio-fallback" href="audio/lea-point-8h.mp3"
-                  >Écouter le fichier audio</a
-                >
-                <details class="transcript">
-                  <summary>Lire le message</summary>
-                  <p>
-                    Bonjour Nadia, voici le point de 8 heures. Six prestations
-                    sur sept sont couvertes. Fatima et Karima sont arrivées. Aux
-                    bureaux Dupont, de 7 heures à 10 heures, il n'y a encore
-                    personne : j'ai proposé le créneau à Karima, Maria et Aïcha.
-                    Je vous préviens dès que c'est couvert.
-                  </p>
-                </details>
               </div>
-              <p class="fine">
-                Exemples fictifs, voix de synthèse. Un remplacement dépend des
-                disponibilités de votre équipe.
-              </p>
+
+              <aside
+                class="map-activity"
+                aria-label="Les actions de Léa dans la démonstration"
+              >
+                <div class="map-lea-heading">
+                  <div class="map-lea-avatar">
+                    <img
+                      src="brand/ruchee-symbol.svg"
+                      alt=""
+                      width="30"
+                      height="30"
+                    />
+                  </div>
+                  <div>
+                    <h3>Léa s'en occupe</h3>
+                    <p>Votre assistante virtuelle</p>
+                  </div>
+                  <span class="map-typing" aria-hidden="true"
+                    ><i></i><i></i><i></i
+                  ></span>
+                </div>
+                <div class="map-action">
+                  <span class="map-action-label">Ce qui se passe</span>
+                  <h4 data-map-action-title>Une absence à gérer</h4>
+                  <p data-map-action-copy>
+                    Maria ne peut pas assurer son créneau à la Résidence
+                    Horizon.
+                  </p>
+                </div>
+                <ol
+                  class="map-feed"
+                  data-map-feed
+                  aria-label="Historique du scénario"
+                >
+                  <li class="map-event is-current">
+                    <time datetime="07:42">7h42</time
+                    ><strong>Absence signalée</strong>
+                    <p>
+                      Maria ne peut pas assurer son créneau à la Résidence
+                      Horizon.
+                    </p>
+                  </li>
+                </ol>
+                <blockquote
+                  class="map-message-preview"
+                  data-map-preview
+                  hidden
+                ></blockquote>
+                <div class="map-playback">
+                  <div class="map-step-label">
+                    Étape <span data-map-step>1 / 6</span>
+                  </div>
+                  <div class="map-playback-actions">
+                    <button
+                      class="map-play"
+                      type="button"
+                      data-map-play
+                      disabled
+                    >
+                      Mettre en pause
+                    </button>
+                  </div>
+                  <p>
+                    Animation de démonstration. Aucun message réel n'est envoyé.
+                  </p>
+                </div>
+              </aside>
+            </div>
+
+            <div class="map-sites-section">
+              <div class="map-sites-heading">
+                <strong>Les sites de votre entreprise</strong
+                ><span>Les statuts évoluent au fil de la démonstration.</span>
+              </div>
+              <div
+                class="map-site-list"
+                role="group"
+                aria-label="Situation des six sites"
+              >
+                <div
+                  data-map-site="horizon"
+                  data-state="uncovered"
+                  aria-current="true"
+                >
+                  <span data-site-name>Résidence Horizon</span
+                  ><small data-site-status>! À couvrir</small>
+                </div>
+                <div data-map-site="martin" data-state="planned">
+                  <span data-site-name>Maison Martin</span
+                  ><small data-site-status>◷ Prévu</small>
+                </div>
+                <div data-map-site="carmes" data-state="late">
+                  <span data-site-name>Commerce des Carmes</span
+                  ><small data-site-status>! Retard signalé</small>
+                </div>
+                <div data-map-site="dupont" data-state="arrived">
+                  <span data-site-name>Bureaux Dupont</span
+                  ><small data-site-status>✓ Arrivée</small>
+                </div>
+                <div data-map-site="saint-luc" data-state="arrived">
+                  <span data-site-name>Cabinet Saint-Luc</span
+                  ><small data-site-status>✓ Arrivée</small>
+                </div>
+                <div data-map-site="tilleuls" data-state="arrived">
+                  <span data-site-name>Résidence Les Tilleuls</span
+                  ><small data-site-status>✓ Arrivée</small>
+                </div>
+              </div>
             </div>
           </div>
+          <div class="map-disclaimer">
+            <p>
+              <b>Des sites, pas des positions de salariés.</b> Les arrivées
+              viennent du pointage QR. Aucun suivi GPS.
+            </p>
+            <span>Entreprise et situations fictives · temps accéléré</span>
+          </div>
+          <p
+            class="sr-only"
+            data-map-live
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+          ></p>
         </div>
       </section>
 

@@ -1132,159 +1132,6 @@ summary:focus-visible {
   font-style: normal;
   font-size: 10px;
 }
-.conversation-layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 64px;
-  align-items: center;
-}
-.context-photo {
-  min-height: 460px;
-  position: relative;
-  border-radius: 20px;
-}
-.context-photo > img {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border-radius: 20px;
-}
-.context-photo:after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 20px;
-  background: linear-gradient(transparent 30%, #1b1a16d9);
-}
-.context-caption {
-  position: absolute;
-  bottom: 32px;
-  left: 30px;
-  color: var(--photo-ink);
-  z-index: 1;
-}
-.context-caption > span {
-  font-size: 12px;
-}
-.context-caption strong {
-  display: block;
-  font: 600 34px/1.1 Outfit;
-  margin-top: 10px;
-  letter-spacing: -0.02em;
-}
-.floating-note {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 15px 20px;
-  position: absolute;
-  z-index: 1;
-  right: -24px;
-  top: 36px;
-  border: 1px solid var(--ligne);
-  border-radius: 14px;
-  background: var(--blanc);
-  box-shadow: var(--shadow);
-  font-size: 11px;
-}
-.floating-note b {
-  display: block;
-  font-size: 12px;
-}
-.panel-label {
-  font-size: 15px;
-  font-weight: 800;
-  margin-bottom: 24px;
-}
-.clip {
-  display: grid;
-  grid-template-columns: 44px minmax(0, 1fr);
-  gap: 10px 16px;
-  border-bottom: 1px solid var(--ligne);
-  padding: 18px 0;
-}
-.clip-play {
-  border: 0;
-  border-radius: 50%;
-  background: var(--encre);
-  color: var(--blanc);
-  width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
-}
-.clip-play span {
-  border-left: 11px solid var(--blanc);
-  border-top: 7px solid transparent;
-  border-bottom: 7px solid transparent;
-  margin-left: 3px;
-}
-.clip-play[aria-pressed="true"] span {
-  width: 11px;
-  height: 14px;
-  margin: 0;
-  border: 0;
-  border-left: 4px solid var(--blanc);
-  border-right: 4px solid var(--blanc);
-}
-.clip-play[aria-busy="true"] {
-  opacity: 0.6;
-}
-.clip-body h3 {
-  font-size: 18px;
-}
-.clip-body {
-  grid-column: 2;
-}
-.audio-fallback {
-  grid-column: 2;
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  font-size: 12px;
-}
-.clip-body > p {
-  font-size: 11px;
-  color: var(--gris);
-  margin-top: 3px;
-}
-.clip-bar {
-  height: 3px;
-  background: var(--ligne);
-  overflow: hidden;
-  margin-top: 10px;
-  border-radius: 4px;
-}
-.clip-bar span {
-  display: block;
-  width: 0;
-  height: 100%;
-  background: var(--miel);
-}
-.transcript {
-  grid-column: 2;
-  font-size: 11px;
-  color: var(--gris);
-}
-.transcript summary {
-  cursor: pointer;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.transcript p {
-  margin: 8px 0;
-}
-.audio-status {
-  grid-column: 1/-1;
-  font-size: 12px;
-  color: var(--alert);
-}
-.voice-panel > .fine {
-  margin-top: 18px;
-}
 .steps-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -2109,9 +1956,6 @@ footer a {
     text-decoration: underline;
     text-decoration-thickness: 1px;
   }
-  .clip-play:hover {
-    transform: scale(1.05);
-  }
   .lang-switch button:hover {
     border-color: var(--encre);
   }
@@ -2201,9 +2045,6 @@ footer a {
   }
   .hero-copy .text-link {
     font-size: 12px;
-  }
-  .conversation-layout {
-    gap: 48px;
   }
   .step-demo {
     padding: 16px;
@@ -2461,21 +2302,6 @@ footer a {
   .problem-grid article > p {
     font-size: 15px;
   }
-  .conversation-layout {
-    grid-template-columns: 1fr;
-    gap: 32px;
-    max-width: 600px;
-    margin: auto;
-  }
-  .context-photo {
-    min-height: 400px;
-  }
-  .floating-note {
-    right: 16px;
-  }
-  .voice-panel {
-    padding-inline: 8px;
-  }
   .steps-grid {
     grid-template-columns: 1fr;
     max-width: 580px;
@@ -2580,7 +2406,7 @@ footer a {
 @media (max-width: 640px) {
   .scene.has-carousel {
     --phone-width: 280px;
-    --phone-height: 550px;
+    --phone-height: 566px;
     --side-offset: 130px;
     height: 600px;
   }
@@ -2646,16 +2472,6 @@ footer a {
   }
   .section-heading p {
     font-size: 14px;
-  }
-  .context-photo {
-    min-height: 360px;
-  }
-  .context-caption {
-    left: 24px;
-    bottom: 24px;
-  }
-  .context-caption strong {
-    font-size: 32px;
   }
   .features-grid {
     grid-template-columns: 1fr;
