@@ -1689,79 +1689,160 @@ summary:focus-visible {
   font-size: 22px;
   color: var(--gris);
 }
-.pricing-grid {
+.plans {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;
-  max-width: 900px;
+  max-width: 960px;
   margin: auto;
-  align-items: start;
+  align-items: stretch;
 }
-.price-card,
-.pilot-card {
+.plan {
+  display: flex;
+  flex-direction: column;
   padding: 34px;
   border-radius: 20px;
   border: 1px solid var(--ligne);
+  background: var(--blanc);
 }
-.price-card {
-  background: var(--creme);
-  border-color: var(--encre);
-}
-.price-card h3 {
-  font-size: 25px;
-  margin-bottom: 8px;
-}
-.price-card > p {
+.plan-name {
+  display: flex;
+  align-items: center;
+  min-height: 26px;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 800;
   color: var(--gris);
-  font-size: 13px;
+  margin-bottom: 14px;
 }
-.price {
+.plan h3 {
+  font-size: 25px;
+  line-height: 1.15;
+  margin-bottom: 10px;
+}
+.plan-lead {
+  font-size: 14px;
+  color: var(--gris);
+  max-width: 34em;
+}
+.plan-price {
   font: 600 58px/1 Outfit;
   letter-spacing: -0.03em;
-  margin: 28px 0 14px;
+  margin: 28px 0 10px;
   display: flex;
   gap: 12px;
   align-items: baseline;
 }
-.price > span {
+.plan-price > span {
   font: 400 13px Manrope;
   letter-spacing: 0;
   color: var(--gris);
 }
-.price-card .price-extra {
-  font-size: 13px;
-  margin-top: 8px;
-}
-.price-card .price-included {
-  color: var(--encre);
+.plan-included {
   font-size: 14px;
+  font-weight: 800;
 }
-.price-card .price-candidates {
+.plan-plus {
   font-size: 12px;
-  margin-top: 18px;
-  padding: 12px 14px;
-  background: var(--miel-soft);
-  border-radius: 10px;
-  color: var(--encre);
+  font-weight: 800;
+  margin-top: 24px;
 }
-.price-card .checks {
+.plan-list {
   border-top: 1px solid var(--ligne);
   margin-top: 24px;
   padding-top: 24px;
-  font-size: 12px;
-  gap: 16px;
+  font-size: 13px;
+  gap: 14px;
 }
-.price-card > .button {
+.plan-plus + .plan-list {
+  border-top: 0;
+  margin-top: 12px;
+  padding-top: 0;
+}
+.plan > .button {
   width: 100%;
-  margin-top: 28px;
+  margin-top: auto;
 }
-.price-card > .fine {
-  font-size: 10px;
-  margin-top: 16px;
+.plan-list,
+.plan-proof {
+  margin-bottom: 28px;
+}
+/* Pro: the inverted card. Text keeps its contrast in both themes (encre/blanc swap with them). */
+.plan-pro {
+  --plan-muted: color-mix(in srgb, var(--blanc) 74%, var(--encre));
+  background: var(--encre);
+  border-color: var(--encre);
+  color: var(--blanc);
+  box-shadow: var(--shadow);
+}
+.plan-pro .plan-name,
+.plan-pro .plan-lead,
+.plan-pro .plan-price > span {
+  color: var(--plan-muted);
+}
+.plan-pro .plan-list {
+  border-color: color-mix(in srgb, var(--blanc) 22%, var(--encre));
+}
+.plan-pro .checks li:before {
+  background: var(--miel);
+  color: var(--on-miel);
+}
+.plan-tag {
+  display: inline-flex;
+  padding: 4px 10px;
+  border-radius: 30px;
+  background: var(--miel);
+  color: var(--on-miel);
+  font-size: 11px;
+  font-weight: 800;
+}
+.plan-proof {
+  font-size: 13px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border-left: 3px solid var(--miel);
+  background: color-mix(in srgb, var(--blanc) 8%, var(--encre));
+}
+.usage {
+  max-width: 960px;
+  margin: 24px auto 0;
+  padding: 28px 34px;
+  border: 1px solid var(--ligne);
+  border-radius: 20px;
+  background: var(--creme);
+}
+.usage-title {
+  font: 600 20px/1.2 Outfit;
+  margin-bottom: 20px;
+}
+.usage-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  margin: 0 0 20px;
+}
+.usage-list dt {
+  font: 600 28px/1 Outfit;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+.usage-list dd {
+  margin: 0;
+  font-size: 13px;
+  color: var(--gris);
 }
 .pilot-card {
   background: var(--miel-soft);
-  padding: 34px 34px 28px;
+  border-radius: 20px;
+}
+.pilot-wide {
+  max-width: 960px;
+  margin: 24px auto 0;
+  padding: 28px 34px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 28px;
+  align-items: center;
 }
 .pilot-tag {
   display: inline-flex;
@@ -1770,29 +1851,16 @@ summary:focus-visible {
   padding: 5px 10px;
   font-size: 10px;
   font-weight: 800;
-  margin-bottom: 34px;
+  margin-bottom: 12px;
 }
-.pilot-card > img {
-  margin-bottom: 20px;
+.pilot-wide h3 {
+  font-size: 24px;
+  line-height: 1.15;
+  margin-bottom: 8px;
 }
-.pilot-card h3 {
-  font-size: 34px;
-  line-height: 1.08;
-  margin-bottom: 20px;
-}
-.pilot-card > p {
+.pilot-wide p {
   font-size: 13px;
-  margin-bottom: 16px;
-}
-.pilot-card .text-link {
-  margin-top: 4px;
-}
-.pilot-foot {
-  border-top: 1px solid var(--gris);
-  padding-top: 22px;
-  margin-top: 24px;
-  font-size: 11px;
-  color: var(--gris);
+  max-width: 46em;
 }
 .faq {
   max-width: 800px;
@@ -2391,11 +2459,12 @@ footer a {
   .comparison > div {
     padding: 26px;
   }
-  .pricing-grid {
+  .plans {
     gap: 20px;
   }
-  .price-card,
-  .pilot-card {
+  .plan,
+  .usage,
+  .pilot-wide {
     padding: 26px;
   }
   .closing-grid {
@@ -2522,13 +2591,24 @@ footer a {
   .comparison ul {
     font-size: 13px;
   }
-  .pricing-grid {
+  .plans,
+  .usage-list {
     grid-template-columns: 1fr;
+  }
+  .plans,
+  .usage,
+  .pilot-wide {
     max-width: 480px;
   }
-  .price-card,
-  .pilot-card {
-    padding: 28px;
+  .usage-list {
+    gap: 16px;
+  }
+  .pilot-wide {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .plan-price {
+    font-size: 50px;
   }
   .faq summary {
     font-size: 13px;
