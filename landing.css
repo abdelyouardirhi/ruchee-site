@@ -223,6 +223,11 @@ summary:focus-visible {
   background: var(--miel);
   color: var(--on-miel);
 }
+.button-outline {
+  background: transparent;
+  color: var(--encre);
+  border-color: var(--encre);
+}
 .nav-cta {
   min-height: 44px;
   padding: 12px 16px;
